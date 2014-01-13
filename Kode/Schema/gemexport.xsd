@@ -1,12 +1,77 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<?xml version='1.0' encoding='UTF-8'?>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
 
-<xs:element name="root">
+<xs:element name='root'>
   <xs:complexType>
     <xs:sequence>
-      <xs:element name="resource" type="xs:string"/>
+      <xs:element name='resource' type='resourceType'/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
+
+<!--Definition af komplekse typer -->
+<xs:complexType name='resourceType'>
+  <xs:sequence>
+	<xs:element name='ID' type='xs:string'/>
+	<xs:element name='title' type='xs:string'/>
+	<xs:element name='description' type='xs:string'/>
+	<xs:element name='itemdate' type='itemdateType'/>
+	<xs:element name='identifier' type='identifierType'/>
+	<xs:element name='publisher' type='publisherType'/>
+	<xs:element name='image' type='imageType'/>
+	<xs:element name='interestingfact' type='interestingfactType'/>
+	<xs:element name='subjects' type='subjectsType'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='itemdateType'>
+  <xs:sequence>
+	<xs:element name='recordcreated' type='xs:string'/>
+	<xs:element name='placedonline' type='xs:string'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='identifierType'>
+  <xs:sequence>
+	<xs:element name='url' type='xs:string'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='publisherType'>
+  <xs:sequence>
+	<xs:element name='name' type='xs:string'/>
+	<xs:element name='agency' type='xs:string'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='imageType'>
+  <xs:sequence>
+	<xs:element name='url' type='xs:string'/>
+	<xs:element name='caption' type='xs:string'/>
+	<xs:element name='alttext' type='xs:string'/>
+	<xs:element name='sourceurl' type='xs:string'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='interestingfactType'>
+  <xs:sequence>
+	<xs:element name='url' type='xs:string'/>
+	<xs:element name='text' type='xs:string'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='subjectsType'>
+  <xs:sequence>
+	<xs:element name='subject' type='subjectType'/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name='subjectType'>
+  <xs:sequence>
+	<xs:element name='category' type='xs:string'/>
+	<xs:element name='subcategory' type='xs:string'/>
+	<xs:element name='primary' type='xs:string'/>
+  </xs:sequence>
+</xs:complexType>
 
 </xs:schema>
