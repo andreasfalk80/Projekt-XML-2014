@@ -1,0 +1,1 @@
+min(//description/string-length())
