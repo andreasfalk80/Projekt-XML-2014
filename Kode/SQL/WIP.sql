@@ -110,7 +110,7 @@ when 'image' then
 when 'interestingfact' then
 	perform shredInterestingFact(resourceId,resourceChildren[idy]);
 when 'resourcekeywords' then
---	raise info 'vi fandt resourcekeywords';
+	perform shredResourceKeywords(resourceId,resourceChildren[idy]);
 when 'subjects' then
 --	raise info 'vi fandt subjects';
 else
@@ -186,7 +186,7 @@ declare
 idy integer;
 factChildren xml[];
 tagname xml[];
--- variable til værdier der skal gemmes på tabellen fact
+-- variable til værdier der skal gemmes på tabellen interestingfact
 url text;
 text text;
 sourceUrl text;
@@ -226,6 +226,49 @@ end
 $$
 language plpgsql;
 
+
+/************************************ Shredder funktion: shredResourceKeywords  **************************************************/
+drop function if exists shredResourceKeywords(integer,xml);
+create function shredResourceKeywords(resourceId integer, resourceKeywords xml) returns void
+as $$
+declare
+idy integer;
+resourceKeywordsChildren xml[];
+tagname xml[];
+-- variable til værdier der skal gemmes på tabellen keywords
+term text;
+
+begin
+
+
+--xpath finder child elementerne (altså en eller flere <term>..</term> elementer
+select xpath('/resourcekeywords/keywords/child::*',resourceKeywords) into resourceKeywordsChildren;
+--raise info 'resourceKeywordsChildren %' ,resourceKeywordsChildren;
+idy = 1;
+loop
+raise info 'resourceKeywordsChildren[%] %' ,idy, resourceKeywordsChildren[idy];
+select xpath('name()',resourceKeywordsChildren[idy]) into tagname;
+case tagname[1]::text
+when 'term' then
+--	raise info 'term fundet';
+	select xmlasText(xpath('/term',resourceKeywordsChildren[idy])) into term;
+else
+-- do nothing
+end case;
+idy = idy +1;
+
+--raise info 'term: %' ,term;
+--indsæt på tabel keyword, 
+insert into keyword(resourceid,term)
+values	(resourceId
+	,term);
+
+exit when idy > array_length(resourceKeywordsChildren,1);
+end loop;
+
+end
+$$
+language plpgsql;
 
 /************************************ hjælper funktion: xmlasText  **************************************************/
 /*denne funktion virker på xml elementer af typen xml array med lignende indhold {<temp>dette er en tekst</temp>} */
