@@ -21,10 +21,9 @@ select
 	,root
 	) as data
 into resources;
---raise info 'antal resources: %' , array_length(resources,1);
+
 idx = 1;
 loop
-  --raise info 'behandler idx: %' , idx;
   --vælg det aktuelle <resource>...</resource> element
   resourceXml = resources[idx];
   perform shredResource(resourceXml);
@@ -57,29 +56,27 @@ publisherAgency text;
 
 begin
 select xpath('child::*',resourceXml) into resourceChildren;
---raise info 'resourceChildren: %', resourceChildren;
 
 --første loop finder alle værdier der skal bruges til at oprette en forekomst i resource tabellen
 idy = 1;
 loop
 select xpath('name()',resourceChildren[idy]) into tagname;
---raise info 'tagname: %' , tagname[1]::text;
 
 case tagname[1]::text
 when 'ID' then
-	select xmlasText(xpath('ID',resourceXml))::integer into resourceId;
+	select xmlasText(xpath('/ID',resourceChildren[idy]))::integer into resourceId;
 when 'title' then
-	select xmlasText(xpath('title',resourceXml)) into title;
+	select xmlasText(xpath('/title',resourceChildren[idy])) into title;
 when 'description' then
-	select xmlasText(xpath('description',resourceXml)) into description;
+	select xmlasText(xpath('/description',resourceChildren[idy])) into description;
 when 'itemdate' then
-	select xmlasText(xpath('itemdate/recordcreated',resourceXml))::date into recordcreated;
-	select xmlasText(xpath('itemdate/placedonline',resourceXml))::date into placedOnline;
+	select xmlasText(xpath('/itemdate/recordcreated',resourceChildren[idy]))::date into recordcreated;
+	select xmlasText(xpath('/itemdate/placedonline',resourceChildren[idy]))::date into placedOnline;
 when 'identifier' then
-	select xmlasText(xpath('identifier/url',resourceXml)) into identifierUrl;
+	select xmlasText(xpath('/identifier/url',resourceChildren[idy])) into identifierUrl;
 when 'publisher' then
-	select xmlasText(xpath('publisher/name',resourceXml)) into publisherName;
-	select xmlasText(xpath('publisher/agency',resourceXml)) into publisherAgency;
+	select xmlasText(xpath('/publisher/name',resourceChildren[idy])) into publisherName;
+	select xmlasText(xpath('/publisher/agency',resourceChildren[idy])) into publisherAgency;
 else
 -- do nothing. resten af elementerne behandles i loop 2
 end case;
@@ -102,7 +99,6 @@ values	(resourceId
 idy = 1;
 loop
 select xpath('name()',resourceChildren[idy]) into tagname;
---raise info 'tagname: %' , tagname[1]::text;
 
 case tagname[1]::text
 when 'image' then
@@ -112,7 +108,7 @@ when 'interestingfact' then
 when 'resourcekeywords' then
 	perform shredResourceKeywords(resourceId,resourceChildren[idy]);
 when 'subjects' then
---	raise info 'vi fandt subjects';
+	perform shredSubject(resourceId,resourceChildren[idy]);
 else
 -- do nothing. resten af elementerne behandles i loop 1
 end case;
@@ -151,13 +147,13 @@ loop
 select xpath('name()',imageChildren[idy]) into tagname;
 case tagname[1]::text
 when 'url' then
-	select xmlasText(xpath('url',image)) into url;
+	select xmlasText(xpath('/url',imageChildren[idy])) into url;
 when 'caption' then
-	select xmlasText(xpath('caption',image)) into caption;
+	select xmlasText(xpath('/caption',imageChildren[idy])) into caption;
 when 'sourceurl' then
-	select xmlasText(xpath('sourceurl',image)) into sourceUrl;
+	select xmlasText(xpath('/sourceurl',imageChildren[idy])) into sourceUrl;
 when 'alttext' then
-	select xmlasText(xpath('alttext',image)) into altText;
+	select xmlasText(xpath('/alttext',imageChildren[idy])) into altText;
 else
 -- do nothing
 end case;
@@ -206,9 +202,9 @@ loop
 select xpath('name()',factChildren[idy]) into tagname;
 case tagname[1]::text
 when 'url' then
-	select xmlasText(xpath('url',fact)) into url;
+	select xmlasText(xpath('/url',factChildren[idy])) into url;
 when 'text' then
-	select xmlasText(xpath('text',fact)) into text;
+	select xmlasText(xpath('/text',factChildren[idy])) into text;
 else
 -- do nothing
 end case;
@@ -243,21 +239,18 @@ begin
 
 --xpath finder child elementerne (altså en eller flere <term>..</term> elementer
 select xpath('/resourcekeywords/keywords/child::*',resourceKeywords) into resourceKeywordsChildren;
---raise info 'resourceKeywordsChildren %' ,resourceKeywordsChildren;
+
 idy = 1;
 loop
-raise info 'resourceKeywordsChildren[%] %' ,idy, resourceKeywordsChildren[idy];
 select xpath('name()',resourceKeywordsChildren[idy]) into tagname;
 case tagname[1]::text
 when 'term' then
---	raise info 'term fundet';
 	select xmlasText(xpath('/term',resourceKeywordsChildren[idy])) into term;
 else
 -- do nothing
 end case;
 idy = idy +1;
 
---raise info 'term: %' ,term;
 --indsæt på tabel keyword, 
 insert into keyword(resourceid,term)
 values	(resourceId
@@ -266,6 +259,52 @@ values	(resourceId
 exit when idy > array_length(resourceKeywordsChildren,1);
 end loop;
 
+end
+$$
+language plpgsql;
+
+/************************************ Shredder funktion: shredSubject  **************************************************/
+drop function if exists shredSubject(integer, xml);
+create function shredSubject(resourceId integer, subjectXml xml) returns void 
+as $$
+declare
+idy integer;
+subjectChildren xml[];
+tagname xml[];
+-- variable til værdier der skal gemmes på tabellen subject
+category text;
+subCategory text;
+primarySubject boolean;
+
+begin
+--xpath finder child elementerne
+select xpath('/subjects/subject/child::*',subjectXml) into subjectChildren;
+
+--første loop finder alle subject elementerne
+idy = 1;
+loop
+select xpath('name()',subjectChildren[idy]) into tagname;
+
+case tagname[1]::text
+when 'category' then
+	select xmlasText(xpath('/category',subjectChildren[idy])) into category;
+when 'subcategory' then
+	select xmlasText(xpath('/subcategory',subjectChildren[idy])) into subCategory;
+when 'primary' then
+	select xmlasText(xpath('/primary',subjectChildren[idy]))::boolean into primarySubject;
+else
+-- do nothing.
+end case;
+idy = idy +1;
+exit when idy > array_length(subjectChildren,1);
+end loop;
+
+--indsæt på tabel subject
+insert into subject (resourceid,category,subcategory,primarysubject)
+values	(resourceId
+	,category
+	,subCategory
+	,primarySubject);
 end
 $$
 language plpgsql;
