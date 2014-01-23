@@ -26,7 +26,7 @@ xmlagg(
       ),
 -- interestingfact
       xmlelement(name interestingfact,
-         xmlforest(facturl,facttext)
+         xmlforest(facturl as url,facttext as text)
       ),
 -- resourcekeywords
       keywordxml      
@@ -52,7 +52,7 @@ subject.xml as subjectxml
 from resource as res
 left join image on res.resourceid = image.resourceid
 left join interestingfact as fact on res.resourceid = fact.resourceid
-join 
+left join 
 (
 select res.resourceid,
 -- resourcekeywords
@@ -75,7 +75,7 @@ select res.resourceid,
    xmlelement(name subjects,
       xmlagg(
          xmlelement(name subject, 
-            xmlforest(category,subcategory,primarysubject as primary)
+            xmlforest(category,subcategory,(case when primarysubject = true then 'YES' else 'NO' ) as primary)
          )
       )
    ) as xml 

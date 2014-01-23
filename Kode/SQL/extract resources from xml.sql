@@ -270,13 +270,13 @@ when 'term' then
 else
 -- do nothing
 end case;
-idy = idy +1;
 
 --indsæt på tabel keyword, 
 insert into keyword(resourceid,term)
 values	(resourceId
 	,term);
 
+idy = idy +1;
 exit when idy > array_length(resourceKeywordsChildren,1);
 end loop;
 
@@ -290,8 +290,11 @@ create function shredSubject(resourceId integer, subjectXml xml) returns void
 as $$
 declare
 idy integer;
+idx integer;
+subjectsChildren xml[];
 subjectChildren xml[];
 tagname xml[];
+tagname2 xml[];
 -- variable til værdier der skal gemmes på tabellen subject
 category text;
 subCategory text;
@@ -299,26 +302,37 @@ primarySubject boolean;
 
 begin
 --xpath finder child elementerne
-select xpath('/subjects/subject/child::*',subjectXml) into subjectChildren;
-
+select xpath('/subjects/child::*',subjectXml) into subjectsChildren;
+--raise info 'subjectsChildren: %' , subjectsChildren;
 --første loop finder alle subject elementerne
-idy = 1;
+idx = 1;
 loop
-select xpath('name()',subjectChildren[idy]) into tagname;
+	select xpath('name()',subjectsChildren[idx]) into tagname;
+--	raise info 'tag %' , tagname;
+	case tagname[1]::text
+	when 'subject' then
+	select xpath('/subject/child::*',subjectsChildren[idx]) into subjectChildren;
+	--andet loop finder alle blad elementerne
+  	idy = 1;  
+	loop
+		select xpath('name()',subjectChildren[idy]) into tagname2;
 
-case tagname[1]::text
-when 'category' then
-	select xmlasText(xpath('/category',subjectChildren[idy])) into category;
-when 'subcategory' then
-	select xmlasText(xpath('/subcategory',subjectChildren[idy])) into subCategory;
-when 'primary' then
-	select xmlasText(xpath('/primary',subjectChildren[idy]))::boolean into primarySubject;
-else
--- do nothing.
-end case;
-idy = idy +1;
-exit when idy > array_length(subjectChildren,1);
-end loop;
+		case tagname2[1]::text
+		when 'category' then
+			select xmlasText(xpath('/category',subjectChildren[idy])) into category;
+		when 'subcategory' then
+			select xmlasText(xpath('/subcategory',subjectChildren[idy])) into subCategory;
+		when 'primary' then
+			select xmlasText(xpath('/primary',subjectChildren[idy]))::boolean into primarySubject;
+		else
+		-- do nothing.
+		end case;
+		idy = idy +1;
+	exit when idy > array_length(subjectChildren,1);
+	end loop;	
+	else
+	-- do nothing.
+	end case;
 
 --indsæt på tabel subject
 insert into subject (resourceid,category,subcategory,primarysubject)
@@ -326,6 +340,11 @@ values	(resourceId
 	,category
 	,subCategory
 	,primarySubject);
+
+idx = idx +1;
+exit when idx > array_length(subjectsChildren,1);
+end loop;
+
 end
 $$
 language plpgsql;
