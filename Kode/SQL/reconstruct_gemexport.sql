@@ -7,7 +7,7 @@ xmlagg(
    xmlelement(name resource,
 
 -- ID, title,description
-      xmlforest(resourceid as ID, title, description),
+      xmlforest(resourceid as "ID", Title, description),
 -- itemdate
       xmlelement(name itemdate,
          xmlforest(recordcreated,placedonline)
@@ -75,7 +75,7 @@ select res.resourceid,
    xmlelement(name subjects,
       xmlagg(
          xmlelement(name subject, 
-            xmlforest(category,subcategory,(case when primarysubject = true then 'YES' else 'NO' ) as primary)
+            xmlforest(category,subcategory,primarysubject as primary)--(case when primarysubject = true then 'YES' else 'NO' ) as primary)
          )
       )
    ) as xml 
