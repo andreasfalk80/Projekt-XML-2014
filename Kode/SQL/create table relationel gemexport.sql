@@ -53,9 +53,19 @@ subjectId serial,
 resourceId integer,
 category text,
 subcategory text,
-primarySubject boolean,
+primarySubject text,
 primary key (subjectId),
 foreign key (resourceId) references resource(resourceId) on delete cascade
 )
 ;
+
+drop table if exists gemexport cascade;
+create table gemexport(
+id serial,
+data xml,
+primary key (id)
+)
+;
+
+
 

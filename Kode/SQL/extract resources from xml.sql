@@ -298,7 +298,7 @@ tagname2 xml[];
 -- variable til værdier der skal gemmes på tabellen subject
 category text;
 subCategory text;
-primarySubject boolean;
+primarySubject text;
 
 begin
 --xpath finder child elementerne
@@ -323,7 +323,7 @@ loop
 		when 'subcategory' then
 			select xmlasText(xpath('/subcategory',subjectChildren[idy])) into subCategory;
 		when 'primary' then
-			select xmlasText(xpath('/primary',subjectChildren[idy]))::boolean into primarySubject;
+			select xmlasText(xpath('/primary',subjectChildren[idy])) into primarySubject;
 		else
 		-- do nothing.
 		end case;

@@ -1,6 +1,9 @@
 ﻿select 
+--xmlroot(
+
 -- root
 xmlelement(name root,
+xmlattributes('http://www.w3.org/2001/XMLSchema-instance' as "xmlns:xsi", 'gemexport.xsd' as "xsi:noNamespaceSchemaLocation"),
 xmlagg(
 
 -- resource
@@ -35,8 +38,10 @@ xmlagg(
       subjectxml      
       
    )
+   )
 )
-)
+--, version '1,0')
+
 from 
 (select res.*, 
 coalesce(image.url,'') as imageurl,
@@ -75,7 +80,8 @@ select res.resourceid,
    xmlelement(name subjects,
       xmlagg(
          xmlelement(name subject, 
-            xmlforest(category,subcategory,primarysubject as primary)--(case when primarysubject = true then 'YES' else 'NO' ) as primary)
+            xmlforest(category,subcategory,primarysubject as primary)
+            xmlforest(category,subcategory,primarysubject as primary)
          )
       )
    ) as xml 
@@ -88,5 +94,6 @@ group by res.resourceid
 
 
 ) as pre
+
 
 ;
