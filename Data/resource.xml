@@ -2,7 +2,7 @@
 <!-- This document was retrieved http://www.free.ed.gov/xml/gemexport.xml -->
 <root 
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:noNamespaceSchemaLocation="../Kode/Schema/gemexport.xsd">
+xsi:noNamespaceSchemaLocation="resource.xsd">
   <resource>
     <ID>3</ID>
     <title>4Teachers</title>
