@@ -1,2 +1,31 @@
 \chapter{Introduktion}
-Dette er en introduktion til rapportens emne \ldots
+\label{sec:Introduktion}
+
+
+\section{Formål}
+\label{sec:Formål}
+Beskrivelse af xml filen og dens data der skal behandles \ldots
+
+\begin{itemize}
+	\item Implementation af effektiv håndtering af xml-filen gemexport.xml.
+	\begin{itemize}
+		\item Første skridt er en analyse af strukturen, hvor resultatet er et xml skema, som kan validere vores xml fil. Dette gøres ved brug af BaseX,  hvor der oprettes en ny database på grundlag af resource.xml.
+		\item Flere forskellige forespørgelser skrives i hhv. Xpath og Xquery,  som bl.a. viser kardinalitetten af  elementer i xml'en. Samt om elementer er oprettet, men er tomme elementer. 
+		\item Som udgangspunkt antages det at xml'en indeholder alle yderligheder der kan forekomme, så f.eks. maks længde for et tekst element kan udledes vha. Forespørgelser mod xml'en.
+		\item Der indsættes en reference til det nyoprettede skema, i den oprindelige xml, og skemaet valideres med xml plugin i Notepad++. Dette kan selvfølgelig gøres med et hvilken som helst xml valideringsværktøj.
+
+	\end{itemize}
+	\item Nu skal xml'en gemmes i en relationel database, og her kan der vælges flere tilgangsmåder.
+	\begin{itemize}
+		\item At modellere xml strukturen vha. Den Entitets og relationelle model, og splitte(shredde) xml op og indsætte den, så vi på den måde kan tilgå data og manipulere med den som en hvilken som helst anden sql database.
+		\item vi kan vælge at indsætte hele vores xmlfil i en række i en tabel, og dernæst primært benytte Xpath forespørgelser til forespørgelser. Disse forespørgelser kan, og vil sikkert blive suppleret med brug af XmlSql funktioner for at strukturere resultatet af Xpath forespørgelserne yderligere.
+		\item Sidste mulighed er delvis shredding, hvor f.eks.  de enkelte resourcer splittes ud i enkelte rækker, med enkelte vigtige attributer, id, evt titel, trulket ud i egne kolonner, for at simplificere filtrering på disse attributter.
+	\end{itemize}
+	\item Indlæsning foregår i postgresql 9.3, som kun understøtter Xpath 1.0, dvs. Ingen Xquery og enkelte funktioner fra nutidig Xpath kan ikke benyttes. Derudover mangler postgresql understøttelse af xmlsql funktionen xmltable,  som ellers er oplagt til mapping fra xml til relationelle tabeller. Hvorimod de implementerede publishing functions er implementeret ok.
+	\end{itemize}
+\end{itemize}
+
+
+
+
+
