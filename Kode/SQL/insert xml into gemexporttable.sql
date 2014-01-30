@@ -1,4 +1,6 @@
-<?xml version='1.0' encoding='UTF-8'?>
+﻿insert into gemexport (data)
+values(
+xmlparse(document '<?xml version="1.0" encoding="UTF-8"?>
 <!-- This document was retrieved http://www.free.ed.gov/xml/gemexport.xml -->
 <root 
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -74398,3 +74400,5 @@ xsi:noNamespaceSchemaLocation="../Kode/Schema/gemexport.xsd">
     </subjects>
   </resource>
 </root>
+')
+)
