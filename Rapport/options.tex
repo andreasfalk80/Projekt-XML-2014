@@ -10,8 +10,21 @@
 %%            main file to include this file.
 %%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OPTIONS FOR ITEMIZE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\labelitemii}{$\circ$} % angiver typografien imtemize - niveau 2 til at være en tom cirkel
 
-\renewcommand{\labelitemii}{$\circ$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NEW COMMANDS FOR FORMATTING
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\fil}[1]{\textit{>>#1<<}} %formatering for filnavne
+\newcommand{\prg}[1]{\textsc{#1}} %formatering for programnavne
+\newcommand{\lang}[1]{\texttt{#1}} %formatering for programmeringssprog
+\newcommand{\funk}[1]{\textbf{#1}} %formatering for funktionsnavne
+\newcommand{\var}[1]{\textbf{\$#1}} %formatering for variabel/parameter navne
+\newcommand{\lref}[1]{\texttt{#1}} %formatering for kodeeksempel linienumre
+\newcommand{\xmlatt}[1]{\texttt{#1}} %formatering for xml elelement atributter
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIONS FOR FANCYHEADER

@@ -1,3 +1,101 @@
  \chapter{Analyse af XML struktur}
+\label{sec:analyse_xml_struktur}
+At gennemskue, og udlede strukturen af et xml dokument kan være en stor opgave, især for et stort dokument med mange elementer. I tilfældet med \fil{resource.xml}, som indeholder utroligt meget data, kan strukturen ikke gennemskues ved en simpel gennemlæsning af filen. 
+Alternativet kan være at oprette en database i \prg{BaseX}, og ved brug af \lang{XQuery} forspørgelser kan der samles nok informationer om elementerne i xml'en, til at kunne beskrive strukturen. Denne tilgang kan forfines yderligere til en \lang{XQuery} funktion, der kan finde alle de ønskede oplysninger på en gang. 
+Derfor implementeres \lang{XQuery} funktionen \funk{local:analyze}, som netop returnerer metadata for xml strukturen. 
+
+I figur \ref{code:struktur_metadata-xml} fremgår det at der ud over elementernes navne også findes evt. maks længde og kardinalitet, samt at strukturen bibeholder forældre/barn forholdet mellem elementerne. For \xmlatt{maxlength} gælder det at den kun udfyldes for elementer med tekstindhold, og betragter indholdet som en tekststreng, selvom det i praksis sagtens kunne være numerisk. Atributten \xmlatt{card} udfyldes med notationene \verb|1:1, 0:1, 0:n, m:n| og dækker de normale muligheder for kardinalitet.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+<elements>
+  <element name="" maxlength="" card="">
+    <element name="" maxlength="" card=""/>
+	</element>
+</elements>
+\end{BVerbatim}
+\caption{Struktur for genereret metadata-xml}
+\label{code:struktur_metadata-xml}
+\end{figure}
+
+Funktionen \funk{local:analyze} returnere metadata om alle elementer, som er efterfølgere til de elementer funktionen blev kaldt med, men ikke input elementerne selv. Det betyder at en analyse af et helt xml dokument, eller fragment, bør startes med kaldet \verb|local:analyze(/)|, altså med dokumentroden som parameter. 
+
+
+
+
+Funktionen \funk{local:analyze} er en wrapper funktion til \funk{local:analyze2}, som er kodet som en rekursiv funktion der behanlder xml strukturen et niveau af gangen.
+
+
+
+
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+declare function local:analyze2($elements as item()*)
+as element()*
+{ 
+   let $names :=  distinct-values($elements/*/name())
+   for $el in $names 
+   let  $maxlength := local:analyze_maxlength($elements/*[name()=$el])
+   let $card := local:analyze_card($elements,$el)
+   return 
+   <element name='{$el}' maxlength='{$maxlength}' card='{$card}'>
+       {local:analyze2($elements/*[name()=$el])}
+   </element>
+};
+\end{BVerbatim}
+\caption{Funktionerne 'local:analyze2'}
+\label{code:func_analyze}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+<elements>
+  <element name="root" maxlength="" card="1:1">
+    <element name="resource" maxlength="" card="(1741)m:n(1741)">
+      <element name="ID" maxlength="4" card="1:1"/>
+      <element name="title" maxlength="107" card="1:1"/>
+      <element name="description" maxlength="500" card="1:1"/>
+      <element name="itemdate" maxlength="" card="1:1">
+        <element name="recordcreated" maxlength="10" card="1:1"/>
+        <element name="placedonline" maxlength="10" card="1:1"/>
+      </element>
+      <element name="identifier" maxlength="" card="1:1">
+        <element name="url" maxlength="195" card="1:1"/>
+      </element>
+      <element name="publisher" maxlength="" card="1:1">
+        <element name="name" maxlength="68" card="1:1"/>
+        <element name="agency" maxlength="58" card="1:1"/>
+      </element>
+      <element name="image" maxlength="" card="1:1">
+        <element name="url" maxlength="71" card="1:1"/>
+        <element name="caption" maxlength="95" card="1:1"/>
+        <element name="alttext" maxlength="200" card="1:1"/>
+        <element name="sourceurl" maxlength="200" card="1:1"/>
+      </element>
+      <element name="interestingfact" maxlength="" card="1:1">
+        <element name="url" maxlength="200" card="1:1"/>
+        <element name="text" maxlength="523" card="1:1"/>
+      </element>
+      <element name="subjects" maxlength="" card="1:1">
+        <element name="subject" maxlength="" card="(1)m:n(30)">
+          <element name="category" maxlength="27" card="1:1"/>
+          <element name="subcategory" maxlength="57" card="1:1"/>
+          <element name="primary" maxlength="3" card="1:1"/>
+        </element>
+      </element>
+      <element name="resourcekeywords" maxlength="" card="0:1">
+        <element name="keywords" maxlength="" card="1:1">
+          <element name="term" maxlength="40" card="(1)m:n(19)"/>
+        </element>
+      </element>
+    </element>
+  </element>
+</elements>
+\end{BVerbatim}
+\caption{Resultat fra kørsel af xml analyse}
+\label{code:xml_analyse_result}
+\end{figure}
 
 
