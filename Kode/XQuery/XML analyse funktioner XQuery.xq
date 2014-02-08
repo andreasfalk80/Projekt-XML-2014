@@ -1,3 +1,13 @@
+declare function local:analyze_attributes($elements as item()*)
+as element()*
+{ 
+     for $att in distinct-values($elements/@*/name())
+     return <attribute name='{$att}' maxlength='{max($elements/@*[name() = $att]/string-length())}'/>
+};
+
+
+
+
 declare function local:analyze_maxlength($elements as item()*)
 as xs:string
 { 
@@ -27,6 +37,7 @@ as element()*
    let $card := local:analyze_card($elements,$el)
    return 
    <element name='{$el}' maxlength='{$maxlength}' card='{$card}'>
+       {local:analyze_attributes($elements/*[name()=$el])}
        {local:analyze2($elements/*[name()=$el])}
    </element>
 };
