@@ -27,16 +27,13 @@ For \xmlatt{maxlength} gælder det at den kun udfyldes for elementer med en text(
 
 Atributten \xmlatt{card} udfyldes med notationene \verb|1:1, 0:1, 0:n, m:n| og dækker de normale muligheder for kardinalitet.
 
-Funktionen \funk{local:analyze} beggynder analysen ved input elementets børn, og returnerer derfor ingen oplysninger om input elementet. Det betyder at en analyse af et helt xml dokument, eller fragment, bør startes med kaldet \verb|local:analyze(/)|, altså med dokumentroden som parameter. Dette skyldes at f.eks. kardinalitets analysen kræver information om hvilken kontekst elementerne optræder i.
+Funktionen \funk{local:analyze} begynder analysen ved input elementets børn, og returnerer derfor ingen oplysninger om input elementet. Det betyder at en analyse af et helt xml dokument, eller fragment, bør startes med kaldet \verb|local:analyze(/)|, altså med dokumentroden som parameter. Dette skyldes at f.eks. kardinalitets analysen kræver information om hvilken kontekst elementerne optræder i.
 
 Funktionen \funk{local:analyze} er en wrapper funktion til \funk{local:analyze2}, som er den rekursive funktion der reelt behandler xml strukturen. For hvert niveau skal alle tags med samme navn behandles og analyseres samlet, og derfor opbygges en liste af fundne elementnavne i linie \lref{04}.
 Elementerne grupperes udfra deres navne for at gøre det muligt at udføre en generel analyse, og dermed være i stand til at udlede oplysninger om element. finde alle mulige efterkommere, samt den maksimale længde for en vilkårlig text node under elementer med dette navn.
 *TODO* beskriv at alle elementer med samme navn på samme sted i strukturen betragtes som samme type, og derfor er en generel analyse vigtig/korrekt. *TODO*
 
-Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en smule mere komplicerede. Derfor er der skrevet  hjælpefunktionerne \funk{local:analyze\_maxlength} og \funk{local:analyze\_card}. Resultatet fra disse funktioner, som kaldes i linie \lref{06} og \lref{07}, tilføjes xml strukturen som attributter . Den sidste funktion \funk{local:analyze_attributes} finder alle de attributer der findes til elementet, samt deres maksimale længde.  
-
-
-
+Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en smule mere komplicerede. Derfor er der skrevet  hjælpefunktionerne \funk{local:analyze\_maxlength} og \funk{local:analyze\_card}. Resultatet fra disse funktioner, som kaldes i linie \lref{06} og \lref{07}, tilføjes xml strukturen som attributter. Den sidste funktion \funk{local:analyze\_attributes} finder alle de attributer der findes til elementet, samt deres maksimale længde, og for hver attribut tilføjes et element. *TODO* referer til indsat eksempel istedetfor at beskrive hvordan det tilføjes til strukturen.... *TODO*  
 
 \begin{figure}[ht]
 \centering
@@ -58,6 +55,24 @@ Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en 
 \caption{Den rekursive funktion 'local:analyze2'}
 \label{code:func_analyze}
 \end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \begin{figure}[ht]
 \centering
