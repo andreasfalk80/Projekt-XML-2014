@@ -1,4 +1,121 @@
 \chapter{XML skema for resource.xml}
 \label{sec:XML skema}
+\section{Formål}
+\label{sec:formaal_skemaet}
+Det primære formål med et xml skema, er muligheden for at validere et xml dokument, og på den måde kontrollere at det aftalte format er overholdt. Ofte kan disse skemaer, som i sig selv er xml dokumenter, også bruges til at automatisk generering af kode til behandling af alle de xml dokumenter som er valide i forhold til skemaet. Dette sker typisk gennem tredjeparts software. 
+
+Et xml skema skal beskrive 2 vigtige egenskaber for at opfylde det beskrevne behov. 
+\begin{description}
+	\item[Strukturen] som beskriver forholdet mellem forældre og børn elementer. Her kommer complexType, sequence med flere i spil
+	\item[Datatyper] som angiver format eller værdisæt for det data der er gemt i elementerne. Her benyttes simpleType, restriction og enumeration med flere.
+\end{description}
+
+Med den tidligere beskrevet analyse funktion, som giver resultatet der kan ses i figur \ref{code:xml_analyse_result}, er det relativt nemt at definere et skema, som kan validere xml strukturen.
+ Men ud over informationen om den maksimale længde for et tekst element, indeholder resultatet ikke nogen information om datatyperne. Disse vil derfor i høj grad blive udledt udfra deres navne og implicitte betydning. Nogle af begrænsningerne der kan ses i skemaet, er tilføjet udelukkende for at demonstrere flere forskellige typer af begrænsninger.
+
+\section{Skemaet}
+\label{sec:skemaet}
+Elementerne i skemaet beskrives her, grupperet udfra hvilke typer og skema 'features' der er benyttet til at definere dem. 
+
+\begin{description}
+\item[complexType og sequence] Typen resourceType er et eksempel på en type der er defineret som en kompleks type, der består af en sekvens af elementer. 
+Gældende for en sekvens er at alle elementerne skal optræde i den angivede rækkefølge. Dette er i modsætning til en anden indikator, all, hvor om det gælder at elementerne kan optræde i en vilkårlig rækkefølge. 
+For hvert element i sekvensen kan der angives kardinalitet, ved brug af indikatorerne minOccurs og maxOccurs. Her er brugt de værdier som analyse funktionen returnerede.
+
+Alle definerede typer, pånær titleType, urlType og primaryType er komplekse typer med en sekvens. Nogle er lavet som navngivede typer, f.eks. resourceType. Mens andre er anonyme typer, som for eksempel typen for elementet keywords, som er defineret i den navngivne type resourcekeywordsType.
+%Der må ikke rettes i formattering, så går det galt. Kode bør kopieres over noteblok, for at fjerne ekstra formateringen fra Notepad++
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim} 
+<xs:complexType name='resourcekeywordsType'>
+  <xs:sequence>
+    <xs:element name='keywords'>
+      <xs:complexType>
+        <xs:sequence>
+	  <xs:element name='term' 
+                      type='xs:string' 
+                      maxOccurs='unbounded'/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+\end{BVerbatim}
+\caption{Eksempel på navngivet og anonym type, der samtidig er kompleks}
+\label{code:def_resourcekeywordsType}
+\end{figure}
+
+\item[simpleType og restriction] Typen titleType tager udgangspunkt i typen string, men tilføjer en begrænsning på længen af strengen, ved brug af minLength og maxLength. UrlType bruger facetten pattern, til at angive et simpelt format tjek af en url adresse, og den sidste simple type, primaryType bruger facetten enumeration, til at begrænse værdierne til YES og NO.
+%Der må ikke rettes i formattering, så går det galt. Kode bør kopieres over noteblok, for at fjerne ekstra formateringen fra Notepad++
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim} 
+<xs:simpleType name='urlType'>
+  <xs:restriction base='xs:string'>
+    <xs:pattern value="((http|https)?://.*)?" />
+  </xs:restriction>
+</xs:simpleType>
+\end{BVerbatim}
+\caption{Eksempel simpel type, med en begrænsning som anvender et pattern}
+\label{code:def_urlType}
+\end{figure}
+
+\item[standard typer] Enkelte elementer benytter sig af standard typer, f.eks. ID som defineres som positiveInteger, og description som en string uden begrænsninger, samt recordcreated og placedonline i itemDate, der begge bruger typen date. 
+\end{description}
 
 
+*TODO* ret til så sequence bliver refereret som en indikator *TODO*
+
+
+*TODO* reference til bilag med hele skemaet *TODO*
+
+%Skal placeres i bilag
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+<elements>
+  <element name="root" maxlength="" card="1:1">
+    <element name="resource" maxlength="" card="1:n(1741)">
+      <element name="ID" maxlength="4" card="1:1"/>
+      <element name="title" maxlength="107" card="1:1"/>
+      <element name="description" maxlength="500" card="1:1"/>
+      <element name="itemdate" maxlength="" card="1:1">
+        <element name="recordcreated" maxlength="10" card="1:1"/>
+        <element name="placedonline" maxlength="10" card="1:1"/>
+      </element>
+      <element name="identifier" maxlength="" card="1:1">
+        <element name="url" maxlength="195" card="1:1"/>
+      </element>
+      <element name="publisher" maxlength="" card="1:1">
+        <element name="name" maxlength="68" card="1:1"/>
+        <element name="agency" maxlength="58" card="1:1"/>
+      </element>
+      <element name="image" maxlength="" card="1:1">
+        <element name="url" maxlength="71" card="1:1"/>
+        <element name="caption" maxlength="95" card="1:1"/>
+        <element name="alttext" maxlength="200" card="1:1"/>
+        <element name="sourceurl" maxlength="200" card="1:1"/>
+      </element>
+      <element name="interestingfact" maxlength="" card="1:1">
+        <element name="url" maxlength="200" card="1:1"/>
+        <element name="text" maxlength="523" card="1:1"/>
+      </element>
+      <element name="subjects" maxlength="" card="1:1">
+        <element name="subject" maxlength="" card="1:n(30)">
+          <element name="category" maxlength="27" card="1:1"/>
+          <element name="subcategory" maxlength="57" card="1:1"/>
+          <element name="primary" maxlength="3" card="1:1"/>
+        </element>
+      </element>
+      <element name="resourcekeywords" maxlength="" card="0:1">
+        <element name="keywords" maxlength="" card="1:1">
+          <element name="term" maxlength="40" card="1:n(19)"/>
+        </element>
+      </element>
+    </element>
+  </element>
+</elements>
+\end{BVerbatim}
+\caption{Resultat fra kørsel af xml analyse}
+\label{code:xml_analyse_result}
+\end{figure}

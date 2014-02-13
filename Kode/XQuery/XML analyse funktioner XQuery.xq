@@ -20,10 +20,10 @@ as xs:string
   let $child_count := $parents/count(*[name()=$child_name])
   let $min := min($child_count)
   let $max := max($child_count)
-  let $result := if($min = 1 and $max = 1) then '1:1' else 
-                 if($min = 0 and $max = 1) then '0:1' else 
-                 if($min = 0 and $max > 1) then concat('0:n','(',$max,')') else 
-                 if($min > 0 and $max > 1) then concat('(',$min,')','m:n','(',$max,')') else 'ERROR' 
+  let $result := if($min = 1 and $max = 1) then '1:1' else  (:required, only one :)
+                 if($min = 0 and $max = 1) then '0:1' else  (:optional, only one :)
+                 if($min = 0 and $max > 1) then concat('0:n','(',$max,')') else (:optional, more than one :)
+                 if($min > 0 and $max > 1) then concat('1:n','(',$max,')') else 'ERROR'(:required, more than one :)
                  
   return $result
 };
