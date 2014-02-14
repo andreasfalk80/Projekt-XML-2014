@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- This document was retrieved http://www.free.ed.gov/xml/gemexport.xml -->
-<root>
+<root 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="resource.xsd">
   <resource>
     <ID>3</ID>
     <title>4Teachers</title>

@@ -1,15 +1,30 @@
- \chapter{Analyse af XML struktur}
-\label{sec:analyse_xml_struktur}
+ \chapter{Analyse af resource}
+\label{chap:analyse_xml_struktur}
 
 \section{Formål}
 \label{sec:Formaal_xml_analyse}
-At gennemskue, og udlede strukturen af et xml dokument kan være en stor opgave, især for et stort dokument med mange elementer. I tilfældet med \fil{resource.xml}, som indeholder utroligt meget data, kan strukturen ikke gennemskues ved en simpel gennemlæsning af filen. 
-Alternativet kan være at oprette en database i \prg{BaseX}, og ved brug af en række \lang{XQuery} forspørgelser kan der samles nok informationer om elementerne i xml'en, til at kunne beskrive strukturen. Dette kan forfines yderligere ved at udvikle en \lang{XQuery} funktion, der kan finde alle de ønskede oplysninger på en gang, og på en struktureret vis returnere de ønskede metadata for xml strukturen. 
+At gennemskue, og udlede strukturen af et xml dokument kan være en stor opgave, især for et stort dokument med mange elementer. I tilfældet med resource, som indeholder utroligt meget data, kan strukturen ikke gennemskues ved en simpel gennemlæsning af filen. 
+Alternativet kan være at oprette en database i \prg{BaseX}, og ved brug af en række \lang{XQuery} forspørgelser kan der samles nok informationer om elementerne i xml'en, til at kunne beskrive strukturen. På denne måde kan \prg{Basex} hjælpe med at skabe overblik. Men det er stadig være en manuel process, hvor der løbende udvikles nye forespørgelser efterhånden som man opbygger kendskab til XML dokumentet. Figur \ref{xquery:count_empty_image} viser hvordan det kan afgøres om der findes elementer \xmlelm{image} hvor alle den under elementer er tomme.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+count(//resource/image[url ='' and caption ='' and alttext='' and sourceurl=''])
+\end{BVerbatim}
+\caption{Forespørgsel der er specielt udviklet til resource}
+\label{xquery:count_empty_image}
+\end{figure}
+
+
+Der kan istedet udvikles en meget mere automatiseret funktion, som behandler dokumentet ud fra generelle betragtninger, og derfor kan bruges for alle XML dokumenter. Derfor udvikles en \lang{XQuery} funktion, der kan finde alle de ønskede oplysninger på en gang, og på en struktureret vis returnere de ønskede metadata for xml strukturen. 
+
+\section{indlæs i BaseX}
+BaseX 7.7.2
+
 
 \section{Design af analyse funktion}
 \label{sec:DesignAfAnalyseFunktion}
 Resultatet af analysen skal være en xml struktur, der beskriver de elementer som input xmlen består af. Figur \ref{code:struktur_metadata-xml} viser det ønskede resultat, hvor informationer om et element angives som attributter til elementet \xmlelm{element}, og informationer om dets attributer som \xmlelm{attribute} elementer efterfulgt af information om dets efterfølgerer som angives som nestede elementer af samme type. **HUSK** eksempel som bilag hvor der rent faktisk er attributter. **HUSK**
-\begin{figure}[hbt]
+\begin{figure}[ht]
 \centering
 \begin{BVerbatim}
 <elements>
