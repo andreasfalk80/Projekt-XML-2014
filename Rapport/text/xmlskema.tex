@@ -1,13 +1,13 @@
-\chapter{XML skema for resource.xml}
-\label{sec:XML skema}
+\chapter{XML skema for resource}
+\label{chap:XML_skema_for_resource}
 \section{Formål}
 \label{sec:formaal_skemaet}
 Det primære formål med et xml skema, er muligheden for at validere et xml dokument, og på den måde kontrollere at det aftalte format er overholdt. Ofte kan disse skemaer, som i sig selv er xml dokumenter, også bruges til at automatisk generering af kode til behandling af alle de xml dokumenter som er valide i forhold til skemaet. Dette sker typisk gennem tredjeparts software. 
 
 Et xml skema skal beskrive 2 vigtige egenskaber for at opfylde det beskrevne behov. 
 \begin{description}
-	\item[Strukturen] som beskriver forholdet mellem forældre og børn elementer. Her kommer complexType, sequence med flere i spil
-	\item[Datatyper] som angiver format eller værdisæt for det data der er gemt i elementerne. Her benyttes simpleType, restriction og enumeration med flere.
+	\item[Strukturen] som beskriver forholdet mellem forældre og børn elementer. Her kommer complexType og sequence med flere i spil
+	\item[Datatyper] som angiver format eller værdisæt for det data der er gemt i elementerne. Her benyttes simpleType og restriction med flere.
 \end{description}
 
 Med den tidligere beskrevet analyse funktion, som giver resultatet der kan ses i figur \ref{code:xml_analyse_result}, er det relativt nemt at definere et skema, som kan validere xml strukturen.
@@ -15,8 +15,11 @@ Med den tidligere beskrevet analyse funktion, som giver resultatet der kan ses i
 
 \section{Skemaet}
 \label{sec:skemaet}
-Elementerne i skemaet beskrives her, grupperet udfra hvilke typer og skema 'features' der er benyttet til at definere dem. 
+*TODO* ret til så sequence bliver refereret som en indikator *TODO*. 
 
+Det endelige skema kan ses i filen resource.xsd, samt i bilag XXX *TODO* reference til bilag med hele skemaet *TODO*. Skemaet er opbygget, ved en manuel gennemgang af analyse resultatet *TODO reference til bilaget*. Hver element er behandlet, og en type af svarende type er defineret i skemaet. Der er brugt navngivne typer i sotr udstrækning, da det øget læsbarheden væsentligt. 
+
+Elementerne i skemaet beskrives her, grupperet udfra hvilke typer og skema 'features' der er benyttet til at definere dem. 
 \begin{description}
 \item[complexType og sequence] Typen resourceType er et eksempel på en type der er defineret som en kompleks type, der består af en sekvens af elementer. 
 Gældende for en sekvens er at alle elementerne skal optræde i den angivede rækkefølge. Dette er i modsætning til en anden indikator, all, hvor om det gælder at elementerne kan optræde i en vilkårlig rækkefølge. 
@@ -56,20 +59,30 @@ Alle definerede typer, pånær titleType, urlType og primaryType er komplekse type
   </xs:restriction>
 </xs:simpleType>
 \end{BVerbatim}
-\caption{Eksempel simpel type, med en begrænsning som anvender et pattern}
+\caption{Eksempel på en simpel type, med en begrænsning som anvender et pattern}
 \label{code:def_urlType}
 \end{figure}
 
 \item[standard typer] Enkelte elementer benytter sig af standard typer, f.eks. ID som defineres som positiveInteger, og description som en string uden begrænsninger, samt recordcreated og placedonline i itemDate, der begge bruger typen date. 
 \end{description}
 
+Med et skema defineret, kan xml strukturen valideres. Det gøres ved at tilføje en reference til skemaet i rod elementet. I dette projekt er Notepad++ samt pluginet xml tools brugt til at foretage valideringen. Ikke overaskende er strukturen valid i forhold til det nye skema.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim} 
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:noNamespaceSchemaLocation="resource.xsd">
+\end{BVerbatim}
+\caption{Reference til skema tilføjet i xml}
+\label{code:reference_til_skema}
+\end{figure}
 
-*TODO* ret til så sequence bliver refereret som en indikator *TODO*
+\section{konklusion}
 
 
-*TODO* reference til bilag med hele skemaet *TODO*
 
-%Skal placeres i bilag
+*TODO* Skal placeres i bilag *TODO*
+%Skal placeres i bilag *TODO
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
