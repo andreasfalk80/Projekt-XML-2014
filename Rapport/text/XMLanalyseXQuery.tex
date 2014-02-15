@@ -28,10 +28,6 @@ Til udvikling af forespørgelser benyttes XML databasen \prg{BaseX 7.7.2}, hvor d
 Koden til funktionerne der udvikles til analyse af et xml dokument findes mappen \fil{Kode/XQuery} i filen \fil{XML analyse funktioner XQuery.xq}, og kan ses i bilag *TODO* indsæt bilag *TODO*
 
 
-
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Design af analyse funktion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Design af analyse funktioner}
 \label{sec:DesignAfAnalyseFunktion}
@@ -90,7 +86,7 @@ Den eneste funktionalitet der implementeres i denne funktion er at tilføje det y
 \subsection{Funktion \funk{analyze2}}
 \label{funktion_analyze2}
 
-Funktionen \funk{analyze2} er den rekursive funktion der reelt behandler xml strukturen. Implementationen er indsat i figur \ref{code:func_analyze}, og beskrives i det følgende. 
+Funktionen \funk{analyze2} er den rekursive funktion der reelt behandler xml strukturen. Implementationen er indsat i figur \ref{code:func_analyze2}, og beskrives i det følgende. 
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
@@ -108,35 +104,90 @@ Funktionen \funk{analyze2} er den rekursive funktion der reelt behandler xml str
 12:    </element>
 13: };
 \end{BVerbatim}
-\caption{Den rekursive funktion 'analyze2'}
-\label{code:func_analyze}
+\caption{Den rekursive funktion analyze2}
+\label{code:func_analyze2}
 \end{figure}
 
-Alle tags med samme navn i den nuværende kontekst behandles og analyseres samlet, og derfor grupperes disse ved at opbygge en liste af unikke elementnavne i linie \lref{04}. For hvert af navnene gemmes resultatet af \funk{analyze\_maxlength} og \funk{analyze\_card} i to variable, for at øge læsbarheden af opbygningen af \xmlelm{element} i linie \lref{09}. Attributter behandles i linie \lref{10}, hvor der opbygges et \xmlelm{attribut} element for hver atribut fundet. Tilsidst foretages det rekursive kald til \funk{analyze2}, som sørger for at opbygge \xmlelm{element} elementer for de fundne underelementer. 
+Alle tags med samme navn i den nuværende kontekst behandles og analyseres samlet, og derfor grupperes disse ved at opbygge en liste af unikke elementnavne i linie \lref{04}. For hvert af navnene gemmes resultatet af \funk{analyze\_maxlength} og \funk{analyze\_card} i to variable, for at øge læsbarheden af opbygningen af \xmlelm{element} i linie \lref{09}. Attributter behandles i linie \lref{10}, hvor der opbygges et \xmlelm{attribut} element for hver atribut fundet. Tilsidst foretages det rekursive kald til \funk{analyze2}, som sørger for at opbygge \xmlelm{element} for det næste niveau.
+
+Det er vigtigt at forstå hvad det er for en størrelse som leveres til funktionerne som input, og det illustreres bedst med et eksempel. Hvis \funk{analyze2} kaldes med \xmlelm{root} elementet, kommer variablen \$names til at indeholde strengen 'resource', da det er det eneste element der er under \xmlelm{root}. Ved kald til f.eks. \funk{analyze\_maxlength}, kan man i linie \lref{06} se at input er givet ved en forespørgelse, som finder alle de underelementer til \xmlelm{root}, som hedder \$el, i vores tilfælde er det strengen 'resource'. Og det er denne mængde af elementer, der bliver behandlet videre i de kaldte funktioner. 
+Funktionen \funk{analyze\_card} har behov for et andet input og det beskrives nærmere i afsnit \ref{subsec:analyze_card}. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze_attributes  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Funktion \funk{analyze\_attributes}}
+\label{subsec:analyze_attributes}
+
+Ud fra mængden af elementer som bliver givet som input bliver der i linie \lref{04} fundet de unikke navne for hver attribut, og i line \lref{06} bliver længden af hver atribut fundet, og tilsidst bliver den maksimale værdi fundet sat ind som en del af resultatet. Koden kan ses i figur \ref{code:func_analyze_attributes}.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+01: declare function local:analyze_attributes($elements as item()*)
+02: as element()*
+03: { 
+04:   for $att in distinct-values($elements/@*/name())
+05:     return <attribute name='{$att}' maxlength=
+06:       '{max($elements/@*[name() = $att]/string-length())}'/>
+07: };
+\end{BVerbatim}
+\caption{Funktionen analyze\_attributes}
+\label{code:func_analyze_attributes}
+\end{figure}
 
 
-Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en smule mere komplicerede. Derfor er der skrevet  hjælpefunktionerne \funk{local:analyze\_maxlength} og \funk{local:analyze\_card}. Resultatet fra disse funktioner, som kaldes i linie \lref{06} og \lref{07}, tilføjes xml strukturen som attributter. Den sidste funktion \funk{local:analyze\_attributes} finder alle de attributer der findes til elementet, samt deres maksimale længde, og for hver attribut tilføjes et element. *TODO* referer til indsat eksempel istedetfor at beskrive hvordan det tilføjes til strukturen.... *TODO*  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze_maxlength  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Funktion \funk{analyze\_maxlength}}
+\label{subsec:analyze_maxlength}
 
+Funktionen finder den maksimale længde, på nøjagtig samme måde som funktionen \funk{analyze\_attributes}, dog returneres der kun en værdi hvis der findes text i elementet.
+%\begin{figure}[ht]
+%\centering
+%\begin{BVerbatim}
+%01: declare function local:analyze_maxlength($elements as item()*)
+%02: as xs:string
+%03: { 
+%04:   if($elements/text()) 
+%05:     then string(max($elements/text()/string-length())) 
+%06:     else ''
+%07: };
+%\end{BVerbatim}
+%\caption{Funktionen analyze\_maxlength}
+%\label{code:func_analyze_maxlength}
+%\end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze_card %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Funktion \funk{analyze\_card}}
+\label{subsec:analyze_card}
 
+Som nævnt har denne funktion brug for mere input, da konteksten er vigtig for at kunne bestemme kardinaliteten. Hvis funktionen kaldes med en mængde \xmlelm{resource} elementer, kan kardinaliteten for \xmlelm{resource} ikke bestemmes, da det ikke kan afgøres hvilke elementer der har samme forælder. 
 
+Hvis vi kigger på eksemplet fra afsnit \ref{funktion_analyze2}, betyder det at funktionen kaldes med \xmlelm{root} i \$parent og 'resource' i child\_name. En vigtig pointe er at der kaldes med hele mængden af alle de mulige forældre, og derfor kan funktionen også bestemme om et element er valgfrit eller obligatorisk.
 
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+01: declare function local:analyze_card($parents as item()*,$child_name as xs:string)
+02: as xs:string
+03: { 
+04:   let $child_count := $parents/count(*[name()=$child_name])
+05:   let $min := min($child_count)
+06:   let $max := max($child_count)
+07:   let $result := 
+08:     if($min = 1 and $max = 1) then '1:1' else
+09:     if($min = 0 and $max = 1) then '0:1' else
+10:     if($min = 0 and $max > 1) then concat('0:n','(',$max,')') else 
+11:     if($min > 0 and $max > 1) then concat('1:n','(',$max,')') else 'ERROR' 
+12:   return $result
+};
+\end{BVerbatim}
+\caption{Funktionen analyze\_card}
+\label{code:func_analyze_card}
+\end{figure}
 
+Koden i linie \lref{04} tæller antallet af underelementer, for hvert enkelt forælder element. Derfor indeholder variablen \$child\_count en mængde af resultater af count, et resultat for hver forælder. Den mindste og største værdi kan nu findes, og bruges til at opsættes resultatet på den ønskede form.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  section konklusion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Konklusion}
+\label{sec:konklusion_xml_analyse}
 
 
 
