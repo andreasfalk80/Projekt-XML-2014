@@ -1,0 +1,51 @@
+*TODO* Skal placeres i bilag *TODO*
+%Skal placeres i bilag *TODO
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+<elements>
+  <element name="root" maxlength="" card="1:1">
+    <element name="resource" maxlength="" card="1:n(1741)">
+      <element name="ID" maxlength="4" card="1:1"/>
+      <element name="title" maxlength="107" card="1:1"/>
+      <element name="description" maxlength="500" card="1:1"/>
+      <element name="itemdate" maxlength="" card="1:1">
+        <element name="recordcreated" maxlength="10" card="1:1"/>
+        <element name="placedonline" maxlength="10" card="1:1"/>
+      </element>
+      <element name="identifier" maxlength="" card="1:1">
+        <element name="url" maxlength="195" card="1:1"/>
+      </element>
+      <element name="publisher" maxlength="" card="1:1">
+        <element name="name" maxlength="68" card="1:1"/>
+        <element name="agency" maxlength="58" card="1:1"/>
+      </element>
+      <element name="image" maxlength="" card="1:1">
+        <element name="url" maxlength="71" card="1:1"/>
+        <element name="caption" maxlength="95" card="1:1"/>
+        <element name="alttext" maxlength="200" card="1:1"/>
+        <element name="sourceurl" maxlength="200" card="1:1"/>
+      </element>
+      <element name="interestingfact" maxlength="" card="1:1">
+        <element name="url" maxlength="200" card="1:1"/>
+        <element name="text" maxlength="523" card="1:1"/>
+      </element>
+      <element name="subjects" maxlength="" card="1:1">
+        <element name="subject" maxlength="" card="1:n(30)">
+          <element name="category" maxlength="27" card="1:1"/>
+          <element name="subcategory" maxlength="57" card="1:1"/>
+          <element name="primary" maxlength="3" card="1:1"/>
+        </element>
+      </element>
+      <element name="resourcekeywords" maxlength="" card="0:1">
+        <element name="keywords" maxlength="" card="1:1">
+          <element name="term" maxlength="40" card="1:n(19)"/>
+        </element>
+      </element>
+    </element>
+  </element>
+</elements>
+\end{BVerbatim}
+\caption{Resultat fra kørsel af xml analyse}
+\label{code:xml_analyse_result}
+\end{figure}
