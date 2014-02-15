@@ -1,6 +1,7 @@
  \chapter{Analyse af resource}
 \label{chap:analyse_xml_struktur}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Formål %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Formål}
 \label{sec:Formaal_xml_analyse}
 At gennemskue, og udlede strukturen af et xml dokument kan være en stor opgave, især for et stort dokument med mange elementer. I tilfældet med resource, som indeholder utroligt meget data, kan strukturen ikke gennemskues ved en simpel gennemlæsning af filen. 
@@ -17,14 +18,34 @@ count(//resource/image[url ='' and
 \label{xquery:count_empty_image}
 \end{figure}
 
-Der kan istedet udvikles en mere generel funktion, som behandler dokumentet ud fra generelle betragtninger, og derfor kan bruges for alle XML dokumenter. Derfor udvikles en \lang{XQuery} funktion, der kan finde alle de ønskede oplysninger, og på en struktureret vis returnere de ønskede metadata for xml strukturen. 
+Der kan istedet udvikles en mere generel funktion, som behandler dokumentet ud fra generelle betragtninger, og derfor kan bruges for alle XML dokumenter. Denne \lang{XQuery} funktion udvikles, så de ønskede metadata for xml strukturen bliver returneret på en strukturet vis. 
 
-\section{indlæs i BaseX}
-BaseX 7.7.2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Brug af BaseX %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Brug af BaseX}
 
-\section{Design af analyse funktion}
+Til udvikling af forespørgelser benyttes XML databasen \prg{BaseX 7.7.2}, hvor der oprettes en ny database der tager udgangspunkt i filen \fil{resource.xml}. Der ændres ikke på indstillingerne for oprettelsen, hvilket betyder at der oprettes både Text og Attribut index, for at effektivisere forespørgelserne.
+
+Koden til funktionerne der udvikles til analyse af et xml dokument findes mappen \fil{Kode/XQuery} i filen \fil{XML analyse funktioner XQuery.xq}, og kan ses i bilag *TODO* indsæt bilag *TODO*
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Design af analyse funktion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Design af analyse funktioner}
 \label{sec:DesignAfAnalyseFunktion}
-Resultatet af analysen skal være en xml struktur, der beskriver de elementer som input xmlen består af. Figur \ref{code:struktur_metadata-xml} viser det ønskede resultat, hvor informationer om et element angives som attributter til elementet \xmlelm{element}, og informationer om dets attributer som \xmlelm{attribute} elementer efterfulgt af information om dets efterfølgerer som angives som nestede elementer af samme type. **HUSK** eksempel som bilag hvor der rent faktisk er attributter. **HUSK**
+
+Der er næsten uendeligt mange aspekter at vurdere i forhold til struktur og datatyper, som kan være interresant at undersøge, og følgende er valgt til denne rapport, da de i lang udstrækning er tilstrækkeligt til at kunne definere et XML skema.
+\begin{itemize}
+	\item Element navn
+	\item Underelementer.
+	\item Kardinaliteten af et element, altså hvor mange gange det kan optræde i dokumentet.
+	\item Hvis et element indeholder data, så findes den maksimale længde af datastrengen.
+	\item Attributer.
+\end{itemize}
+Figur \ref{code:struktur_metadata-xml} viser den XML struktur som funktionen skal resultere i. Informationer om et element angives som attributter til elementet \xmlelm{element}, og informationer om dets attributer som \xmlelm{attribute} underelementer. Denne struktur for \xmlelm{element} gentages rekursivt for alle underlementerne. 
+**HUSK** eksempel som bilag hvor der rent faktisk er attributter. **HUSK**
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
@@ -38,19 +59,38 @@ Resultatet af analysen skal være en xml struktur, der beskriver de elementer som
 \caption{Struktur for genereret metadata-xml}
 \label{code:struktur_metadata-xml}
 \end{figure}
+For \xmlatt{maxlength} gælder det at den kun udfyldes for elementer med en text() node. Virkemåden for \xmlatt{maxlength} er ikke defineret for elementer med mixed-content, og da den pågældende xml resource.xml ikke indeholder mixed-content, bliver dette tilfælde ikke håndteret yderligere.
+Attributten \xmlatt{card} udfyldes med notationene \verb|1:1, 0:1, 0:n(v), 1:n(v)| og dækker de normale muligheder for kardinalitet. I parentesen angiver \verb|v|, den største værdi der blev fundet for \verb|n|.
 
-For \xmlatt{maxlength} gælder det at den kun udfyldes for elementer med en text() node. Virkemåden for \xmlatt{maxlength} er ikke defineret for elementer med mixed-content, og da den pågældende xml fra \fil{resource.xml} ikke indeholder mixed-content, bliver dette tilfælde ikke behandlet yderligere.
+Vær opmærksom på at elementerne behandles i grupper baseret på deres navn og den kontekst de optræder i. Dvs. at kardinalitetten ikke undersøges for et enkelt element \xmlelm{url}, men for alle elementer der har navnet 'url', i den pågældende kontekst.
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Implementation af local:analyze %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation af analyse funktioner}
+\label{Implementation_af_analyse_funktioner}
 
-Atributten \xmlatt{card} udfyldes med notationene \verb|1:1, 0:1, 0:n, m:n| og dækker de normale muligheder for kardinalitet.
+Løsningen struktureres ud i flere funktioner, svarende til en funktion pr. oplysning. Alle implementerede funktioner oprettes i det namespace der hedder local, og navngives derfor f.eks. \funk{local:analyze}, Men i resten af rapporten udelades namespace, og den funktion vil blive refereret til som \funk{analyze}.
+\begin{itemize}
+	\item \funk{analyze} er start funktionen der kaldes for at få analyseret en xml struktur.
+	\item \funk{analyze2} kaldes af \funk{analyze}, og er en rekursiv funktion der opbygger resultatet. 
+	\item \funk{analyze\_attributes} finder alle attributter for et element, samt den maksimale længde af data fundet i attributten.
+	\item \funk{analyze\_maxlength} finder den maksimale længde af data fundet i elementet.
+	\item \funk{analyze\_card} finder kardinaliteten af elementet
+\end{itemize}
 
-Funktionen \funk{local:analyze} begynder analysen ved input elementets børn, og returnerer derfor ingen oplysninger om input elementet. Det betyder at en analyse af et helt xml dokument, eller fragment, bør startes med kaldet \verb|local:analyze(/)|, altså med dokumentroden som parameter. Dette skyldes at f.eks. kardinalitets analysen kræver information om hvilken kontekst elementerne optræder i.
+%Til at opbygge XML'en med metadata, udnyttes \lang{XQuery}'s gode understøttelse af at generere xml som resultat af en forespørgelse.
 
-Funktionen \funk{local:analyze} er en wrapper funktion til \funk{local:analyze2}, som er den rekursive funktion der reelt behandler xml strukturen. For hvert niveau skal alle tags med samme navn behandles og analyseres samlet, og derfor opbygges en liste af fundne elementnavne i linie \lref{04}.
-Elementerne grupperes udfra deres navne for at gøre det muligt at udføre en generel analyse, og dermed være i stand til at udlede oplysninger om element. finde alle mulige efterkommere, samt den maksimale længde for en vilkårlig text node under elementer med dette navn.
-*TODO* beskriv at alle elementer med samme navn på samme sted i strukturen betragtes som samme type, og derfor er en generel analyse vigtig/korrekt. *TODO*
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Funktion \funk{analyze}}
+\label{funktion_analyze}
+Funktionen \funk{analyze} begynder analysen ved input elementets børn, og returnerer derfor ingen oplysninger om input elementet. Det betyder at en analyse af et helt xml dokument, eller fragment, bør startes med kaldet \verb|local:analyze(/)|, altså med dokumentroden som parameter. Dette skyldes at f.eks. kardinalitets analysen kræver information om hvilken kontekst elementerne optræder i.
 
-Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en smule mere komplicerede. Derfor er der skrevet  hjælpefunktionerne \funk{local:analyze\_maxlength} og \funk{local:analyze\_card}. Resultatet fra disse funktioner, som kaldes i linie \lref{06} og \lref{07}, tilføjes xml strukturen som attributter. Den sidste funktion \funk{local:analyze\_attributes} finder alle de attributer der findes til elementet, samt deres maksimale længde, og for hver attribut tilføjes et element. *TODO* referer til indsat eksempel istedetfor at beskrive hvordan det tilføjes til strukturen.... *TODO*  
+Den eneste funktionalitet der implementeres i denne funktion er at tilføje det yderste \xmlelm{elements} element til resultatet.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze2  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Funktion \funk{analyze2}}
+\label{funktion_analyze2}
+
+Funktionen \funk{analyze2} er den rekursive funktion der reelt behandler xml strukturen. Implementationen er indsat i figur \ref{code:func_analyze}, og beskrives i det følgende. 
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
@@ -59,7 +99,7 @@ Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en 
 03: { 
 04:    let $names :=  distinct-values($elements/*/name())
 05:    for $el in $names 
-06:    let  $maxlength := local:analyze_maxlength($elements/*[name()=$el])
+06:    let $maxlength := local:analyze_maxlength($elements/*[name()=$el])
 07:    let $card := local:analyze_card($elements,$el)
 08:    return 
 09:    <element name='{$el}' maxlength='{$maxlength}' card='{$card}'>
@@ -68,9 +108,16 @@ Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en 
 12:    </element>
 13: };
 \end{BVerbatim}
-\caption{Den rekursive funktion 'local:analyze2'}
+\caption{Den rekursive funktion 'analyze2'}
 \label{code:func_analyze}
 \end{figure}
+
+Alle tags med samme navn i den nuværende kontekst behandles og analyseres samlet, og derfor grupperes disse ved at opbygge en liste af unikke elementnavne i linie \lref{04}. For hvert af navnene gemmes resultatet af \funk{analyze\_maxlength} og \funk{analyze\_card} i to variable, for at øge læsbarheden af opbygningen af \xmlelm{element} i linie \lref{09}. Attributter behandles i linie \lref{10}, hvor der opbygges et \xmlelm{attribut} element for hver atribut fundet. Tilsidst foretages det rekursive kald til \funk{analyze2}, som sørger for at opbygge \xmlelm{element} elementer for de fundne underelementer. 
+
+
+Attributen \xmlatt{name} er simpel at finde værdien for, mens de to andre er en smule mere komplicerede. Derfor er der skrevet  hjælpefunktionerne \funk{local:analyze\_maxlength} og \funk{local:analyze\_card}. Resultatet fra disse funktioner, som kaldes i linie \lref{06} og \lref{07}, tilføjes xml strukturen som attributter. Den sidste funktion \funk{local:analyze\_attributes} finder alle de attributer der findes til elementet, samt deres maksimale længde, og for hver attribut tilføjes et element. *TODO* referer til indsat eksempel istedetfor at beskrive hvordan det tilføjes til strukturen.... *TODO*  
+
+
 
 
 
