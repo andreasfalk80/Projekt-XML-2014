@@ -1,0 +1,42 @@
+\begin{itemize}
+\item[simpleType og restriction] Typen titleType tager udgangspunkt i typen string, men tilføjer en begrænsning på længen af strengen, ved brug af minLength og maxLength. UrlType bruger facetten pattern, til at angive et simpelt format tjek af en url adresse, og den sidste simple type, primaryType bruger facetten enumeration, til at begrænse værdierne til YES og NO.
+%Der må ikke rettes i formattering, så går det galt. Kode bør kopieres over noteblok, for at fjerne ekstra formateringen fra Notepad++
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim} 
+<xs:simpleType name='urlType'>
+  <xs:restriction base='xs:string'>
+    <xs:pattern value="((http|https)?://.*)?" />
+  </xs:restriction>
+</xs:simpleType>
+\end{BVerbatim}
+\caption{Eksempel på en simpel type, med en begrænsning som anvender et pattern}
+\label{code:def_urlType}
+\end{figure}
+
+\item[standard typer] Enkelte elementer benytter sig af standard typer, f.eks. ID som defineres som positiveInteger, og description som en string uden begrænsninger, samt recordcreated og placedonline i itemDate, der begge bruger typen date. 
+\end{itemize}
+
+
+
+%Der må ikke rettes i formattering, så går det galt. Kode bør kopieres over noteblok, for at fjerne ekstra formateringen fra Notepad++
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim} 
+<xs:complexType name='resourcekeywordsType'>
+  <xs:sequence>
+    <xs:element name='keywords'>
+      <xs:complexType>
+        <xs:sequence>
+	  <xs:element name='term' 
+                      type='xs:string' 
+                      maxOccurs='unbounded'/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+\end{BVerbatim}
+\caption{Eksempel på navngivet og anonym type, der samtidig er kompleks}
+\label{code:def_resourcekeywordsType}
+\end{figure}
