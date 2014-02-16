@@ -1,0 +1,35 @@
+\chapter{XML i SQL database}
+\label{chap:XML_i_SQL_DB}
+\section{Formål}
+Det er muligt at gemme xml dokumenter i en SQL database, og til formålet er der lavet en ny SQL datatype der hedder xml. Ved at gemme XML i en kolonne af denne type, kan der laves forespørgelser via \lang{XPath} og \lang{XQuery}, i sammenspil med en normal SQL forespørgelse. Denne funktionalitet kaldes også SQL/XML.
+
+XML dokumentet resource skal nu gemmes i en relationel database, nærmere bestemt \prg{PostgreSQL~9.3}.%, som pt. kun understøtter \lang{XPath 1.0} forespørgelser. 
+Før et XML dokument kan gemmes i en sql database, bør man overveje hvilken strategi der skal følges. 
+\begin{itemize}
+	\item XML dokumentet gemmes i en enkelt celle i en tabel, uden der foretages nogen som helst bearbejdning, og SQL databasen benyttes udelukkende som et opbevaringssted.
+	\item XML dokumentet splittes(shreddes), og indsættes i en datamodel der er modelleret til at passe med den oprindelige XML struktur. 
+	
+	Man kan foretage enten en fuldstændig eller delvis opsplitning. 
+	
+	I tilfældes med resource, kunne en delvis opsplitning være at hvert \xmlelm{resource} element indsættes i en række bestående  af værdien fra \xmlelm{ID} trukket ud, og lagt i en kolonne, samt en kolonne af typen xml, der indeholder xml fragmenten for den enkelte resource.
+	
+	En fuld opsplitning vil betyder at der ikke gemmes XML, da al data er remodeleret.
+\end{itemize}
+
+I de næste afsnit vil XML dokumentet resource blive gemt i en relationel database, det ske ved hjælp af forskellige \lang{XPath} forespørgelser. Derefter vil forskellige SQL/XML funktioner blive brugt til at opbygge XML dokumenter udfra den relationelle database.
+
+\section{Design af XML dokumentet resource i relationel database}
+\label{sec:Design_af_XML_resource_rel_db}
+I forbindelse med denne rapport vælges den totale opsplitning af XML dokumentet til den relationelle datamodel, af den simple grund at det giver størst mulighed for at prøve kræfter med SQL/XML og \lang{XPath}.
+
+Ud fra skemaet for resource, kan man udfra kardinaliteten for elementerne få et udgangspunkt for hvilke entiteter der er behov for. I figur \ref{fig:ER_diagram} kan den model som er fremkommet ses. Der vil ikke blive forklaret hvilke beslutninger der ligger til grund for modellen, da den er af sekundær betydning i denne rapport. 
+
+
+\begin{figure}[ht]
+  \centering
+   \framebox{\includegraphics[width=1\textwidth]{pic/gemexport_ER.pdf}}
+   \caption{ER diagram for resource database}
+   \label{fig:ER_diagram}
+\end{figure}
+
+
