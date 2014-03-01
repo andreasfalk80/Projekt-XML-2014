@@ -1,10 +1,10 @@
-﻿insert into gemexport (data)
+﻿insert into resource_xml (data)
 values(
 xmlparse(document '<?xml version="1.0" encoding="UTF-8"?>
 <!-- This document was retrieved http://www.free.ed.gov/xml/gemexport.xml -->
 <root 
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:noNamespaceSchemaLocation="../Kode/Schema/gemexport.xsd">
+xsi:noNamespaceSchemaLocation="resource.xsd">
   <resource>
     <ID>3</ID>
     <title>4Teachers</title>

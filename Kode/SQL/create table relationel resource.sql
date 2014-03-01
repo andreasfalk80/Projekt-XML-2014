@@ -59,8 +59,8 @@ foreign key (resourceId) references resource(resourceId) on delete cascade
 )
 ;
 
-drop table if exists gemexport cascade;
-create table gemexport(
+drop table if exists resource_xml cascade;
+create table resource_xml(
 id serial,
 data xml,
 primary key (id)

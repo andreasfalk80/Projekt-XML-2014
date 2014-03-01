@@ -368,5 +368,5 @@ language plpgsql;
 
 
 select shredResources(data)
-from gemexport
+from resource_xml
 ;

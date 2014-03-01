@@ -1,9 +1,16 @@
-﻿select 
+﻿drop function if exists reconstructResources();
+create function reconstructResources() returns xml
+as $$
+declare
+
+begin
+return 
+(select 
 --xmlroot(
 
 -- root
 xmlelement(name root,
-xmlattributes('http://www.w3.org/2001/XMLSchema-instance' as "xmlns:xsi", 'gemexport.xsd' as "xsi:noNamespaceSchemaLocation"),
+xmlattributes('http://www.w3.org/2001/XMLSchema-instance' as "xmlns:xsi", 'resource.xsd' as "xsi:noNamespaceSchemaLocation"),
 xmlagg(
 
 -- resource
@@ -43,7 +50,15 @@ xmlagg(
 --, version '1,0')
 
 from 
-(select res.*, 
+(select 
+res.resourceid,
+res.title,
+res.description,
+res.recordcreated,
+res.placedonline,
+res.identifierurl,
+coalesce(res.publishername,'') as publishername,
+res.publisheragency,
 coalesce(image.url,'') as imageurl,
 coalesce(caption,'') as caption,
 coalesce(alttext,'') as alttext,
@@ -81,7 +96,6 @@ select res.resourceid,
       xmlagg(
          xmlelement(name subject, 
             xmlforest(category,subcategory,primarysubject as primary)
-            xmlforest(category,subcategory,primarysubject as primary)
          )
       )
    ) as xml 
@@ -93,7 +107,12 @@ group by res.resourceid
 ) as subject on res.resourceid = subject.resourceid
 
 
-) as pre
+) as pre);
+
+end
+$$
+language plpgsql;
+
+select reconstructResources();
 
 
-;

@@ -1,5 +1,6 @@
 \chapter{XML i SQL database}
 \label{chap:XML_i_SQL_DB}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% section formål %%%%%%%%%%%%%%%%%%%%%%
 \section{Formål}
 Det er muligt at gemme xml dokumenter i en SQL database, og til formålet er der lavet en ny SQL datatype der hedder xml. Ved at gemme XML i en kolonne af denne type, kan der laves forespørgelser via \lang{XPath} og \lang{XQuery}, i sammenspil med en normal SQL forespørgelse. Denne funktionalitet kaldes også SQL/XML.
 
@@ -18,18 +19,257 @@ Før et XML dokument kan gemmes i en sql database, bør man overveje hvilken strat
 
 I de næste afsnit vil XML dokumentet resource blive gemt i en relationel database, det ske ved hjælp af forskellige \lang{XPath} forespørgelser. Derefter vil forskellige SQL/XML funktioner blive brugt til at opbygge XML dokumenter udfra den relationelle database.
 
-\section{Design af XML dokumentet resource i relationel database}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% section design af resource i DB %%%%%%%%%%%%%%%%%%%%%%
+\section{Design af XML i relationel database}
 \label{sec:Design_af_XML_resource_rel_db}
 I forbindelse med denne rapport vælges den totale opsplitning af XML dokumentet til den relationelle datamodel, af den simple grund at det giver størst mulighed for at prøve kræfter med SQL/XML og \lang{XPath}.
 
-Ud fra skemaet for resource, kan man udfra kardinaliteten for elementerne få et udgangspunkt for hvilke entiteter der er behov for. I figur \ref{fig:ER_diagram} kan den model som er fremkommet ses. Der vil ikke blive forklaret hvilke beslutninger der ligger til grund for modellen, da den er af sekundær betydning i denne rapport. 
-
-
+Ud fra skemaet for resource, kan man udfra kardinaliteten for elementerne få et udgangspunkt for hvilke entiteter der er behov for. I figur \ref{fig:ER_diagram} kan den model som er fremkommet ses.Selve modeleringen vil ikke blive gennemgået, da den er af sekundær betydning i denne rapport, dog kan det nævnes at alle repeterende elementer er lagt ud i sine egne entiteter. 
 \begin{figure}[ht]
   \centering
-   \framebox{\includegraphics[width=1\textwidth]{pic/gemexport_ER.pdf}}
+   \framebox{\includegraphics[width=0.75\textwidth]{pic/gemexport_ER.pdf}}
    \caption{ER diagram for resource database}
    \label{fig:ER_diagram}
 \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection shredding funktioner  %%%%%%
+\subsection{Funktioner til opsplitning af XML}
+\label{subsec:design_shredding}
+Grundideen er at behandle en resource ad gangen. Dvs. der skal implementeres en funktion der kan udtrække de data der skal gemmes i tabellen resource, og dernæst foretage indsættelsen.
+
+For hvert af de underelementer til resource der er modeleret som sin egen entitet, skal der implementeres yderlige funktioner, der kan behandle disse xml fragmenter. 
+
+Hver af disse funktioner, skal kontrollere at der rent faktisk finde data i XML strukturen, der kan retfærdigøre at en række oprettes. Der accepteres ikke rækker fyldt med kun blanke felter.
+
+Der skal derfor implementeres følgende funktioner til opsplitning:
+\begin{compactitem}
+	\item shredResources. Hovedfunktion der læser XML, og finder resource elementerne.
+	\item shredResource. Opsplitter et resource element.
+	\item shredImage. Opsplitter et image element.
+	\item shredInterestingFact. Opsplitter et Interestingfact element.
+	\item shredResourceKeywords. Opsplitter et Resourcekeywords element.
+	\item shredSubject. Opsplitter et subject element.
+\end{compactitem}
+\vspace{1.0mm}
+
+\subsection{Funktioner til generering af XML}
+\label{subsec:design_generate_xml}
+Der skal udvikles en funktion der kan opbygge en XML struktur der indeholder de samme elementer som det oprindelige XML dokument. Kravet er der genereres et dokument der kan valideres udfra det XML skema der blev defineret i kapitel \ref{chap:XML_skema_for_resource}.
+\begin{compactitem}
+	\item reconstructResources. 
+\end{compactitem}
+\vspace{1.0mm}
+For at dokumentet kan valideres, er det nødvendigt at der genereres alle de krævede elementer, også selvom de er tomme, og ikke har en tilsvarende række i SQL databasen.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% section implementation design af resource i DB %%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation XML i relationel database}
+\label{sec:impl_af_XML_resource_rel_db}
+For at kunne begynde indlæsning af xml i en database, skal tabellerne oprettes, og der skal være adgang til XML dokumentet.
+
+Derfor er der oprettet følgende scritps til at oprette tabeller, og indlæse XML dokumentet i databasen:
+\begin{itemize}
+	\item \fil{create table relationel resource.sql} opretter alle nødvendige tabeller.
+	\item \fil{insert xml into resource\_xmltable.sql} foretager hardcoded insert af xml dokumentet i tabel resource\_xml, hvor de implementerede funktion læser xml'en fra.
+\end{itemize}
+Ved at indlæse XML'en på denne måde, undgås problemer med rettigheder til at læse fra filsystemet.
+
+I det efterfølgende vil de implementerede funktioner til opsplitning af XML og generering af XML blive gennemgået.
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection funktioene shredResources  %%%%%%
+\subsection{Funktionen shredResources}
+\label{subsec:sql_shredResources}
+Funktionen skal kaldes med en parameter af typen xml, nemlig det XML der er blevet indlæst i resource\_xml.
+Efter lidt oprydning i tabellerne kommer den første SQL/XML forespørgelse, som er en ren \lang{Xpath} forespørgelse, hvor resultatet gemmes i variablen resources. Resources løbes gennem, og funktionen shredResource behandler de enkelte xml elementer \xmlelm{resource}.
+
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+create function shredResources(root xml) returns void
+...
+resources xml[];
+...
+select 
+	xpath(
+	'/root/resource'
+	,root
+	) as data
+into resources;
+
+idx = 1;
+loop
+  --vælg det aktuelle <resource>...</resource> element
+  resourceXml = resources[idx];
+  perform shredResource(resourceXml);
+  idx = idx + 1;
+exit when idx > array_length(resources,1);
+end loop;
+...
+\end{BVerbatim}
+\caption{Centrale dele af funktionen shredResources}
+\label{code:shredResources}
+\end{figure}
+
+%	\item \fil{extract resources from xml.sql}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection funktioen shredResource  %%%%%%%%%%
+\subsection{Funktionen shredResource}
+\label{subsec:sql_shredResource}
+Denne funktion finder alle under elementerne til et \xmlelm{resource} element. Alle elementer der svarer til et felt på tabellen resource\_xml behandles i loop 1, hvor \lang{XPath} benyttes til at udtrække værdierne. Her kaldes en funktion xmlAsText, som er en hjælpe funktion skrevet til at lave typen xml om til typen text. Når alle værdier er udtrukket, indsættes der en række på tabellen.  I tilfældet med \xmlelm{publisher} kan det ses at der udtrækkes 2 værdier fra hhv. \xmlelm{name } og \xmlelm{agency}. Det skyldes at publisher ikke er modeleret som sin egen entitet, så det ekstra niveau ignoreres. 
+
+Nu kan alle de underelementer der er blevet modelleret som deres egne entiteter behandles, og dette foregår i endnu et loop, som opbygges på samme måde som loop 1, men hvor der kaldes funktioner der kan behandle den underliggende xml struktur.
+
+Behandlingen er opdelt i to loops, da der skal være oprettet en række i resource\_xml, før der kan oprettes rækker i de andre tabeller, da der er oprettet RI constraints.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+create function shredResource(resourceXml xml) returns void 
+...
+resourceChildren xml[];
+tagname xml[];
+...
+select xpath('child::*',resourceXml) into resourceChildren;
+
+--første loop finder alle værdier der skal bruges i resource tabellen
+idy = 1;
+loop
+select xpath('name()',resourceChildren[idy]) into tagname;
+
+case tagname[1]::text
+when 'ID' then
+  select xmlasText(xpath('/ID',
+	                 resourceChildren[idy]))::integer into resourceId;
+when 'title' then
+  select xmlasText(xpath('/title',
+	                 resourceChildren[idy])) into title;
+	...
+when 'publisher' then
+  select xmlasText(xpath('/publisher/name',
+	                 resourceChildren[idy])) into publisherName;
+  select xmlasText(xpath('/publisher/agency',
+	                 resourceChildren[idy])) into publisherAgency;
+else
+-- do nothing. resten af elementerne behandles i loop 2
+end case;
+idy = idy +1;
+exit when idy > array_length(resourceChildren,1);
+end loop;
+...
+\end{BVerbatim}
+\caption{Centrale dele af funktionen shredResource}
+\label{code:shredResource1}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection de resterende funktioner  %%%%%%%%%%
+\subsection{De resterende funktioner til opsplitning}
+\label{subsec:sql_resterende _funkt}
+Funktionerne til behandling af resten af xml strukturen er opbygget på nøjagtig samme måde, og vil ikke blive gennemgået i detaljer. 
+\begin{compactitem}
+\item shredImage
+\item shredInterestingFact 
+\item shredResourceKeywords
+\item shredSubject
+\end{compactitem}
+Det ønskes ikke at oprette rækker på nogle af disse tabeller, hvis ikke der er fundet data til dem, og derfor er der kodet et ekstra tjek for indhold inden underelementerne behandles. Et eksempel taget fra shredInterestingFact vises i figur \ref{code:shredInterestingFact}.
+
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+select xpath('/interestingfact[not(url ="" and text ="")]/child::*',fact) 
+          into factChildren;
+\end{BVerbatim}
+\caption{Tjek for indhold i tags}
+\label{code:shredInterestingFact}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection reconstruc  %%%%%%%%%%
+\subsection{Funktionen reconstructResources}
+\label{subsec:sql_reconstructResources}
+Denne funktion benytter sig af de publiserings funktioner der er tilrådighed, bl.a.
+\begin{compactitem}
+\item xmlroot
+\item xmlattributes
+\item xmlelement
+\item xmlforest
+\item xmlagg
+\end{compactitem}
+
+Ved at benyttes disse funktion sammen med selects der finder dataene fra tabellerne opbygges xml strukturen.
+Det bemærkes at der benyttes left join og coalesce funktionen for at håndtere de tilfælde hvor der f.eks. ikke findes en række i interestingFacts tabellen. xmlattributes anvendes til at refererer til det skema som XML dokumentet skal valideres imod. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection de resterende funktioner  %%%%%%%%%%
+\section{Resultat for shredding}
+\label{sec:res_shred}
+Funktionen shredResources udskriver en opsummering af resultatet efter udførelsen, og det kan ses i figur \ref{code:resultatshredResource}
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+INFO:  Sletter alt fra tabellerne: resource, image, 
+                  interestingfact, keyword, subject
+INFO:  Indlæser data fra xml
+INFO:  Indsat 1741 records i tabel: resource
+INFO:  Indsat 1592 records i tabel: image
+INFO:  Indsat 629 records i tabel: interestingfact
+INFO:  Indsat 2546 records i tabel: keyword
+INFO:  Indsat 3628 records i tabel: subject
+INFO:  Indsat i alt 10136 records
+
+Total query runtime: 5662 ms.
+1 row retrieved.
+\end{BVerbatim}
+\caption{Resultat af shredResources}
+\label{code:resultatshredResource}
+\end{figure}
+
+Nu er xmldokumentet fuldstændig normaliseret og tilgængelig i en SQL database.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%  subsection de resterende funktioner  %%%%%%%%%%
+\section{Resultat for xml generering}
+\label{sec:res_generering}
+
+Det genererede xml dokument er eksporteret til filen \fil{reconstructed.xml}, og valideret med \prg{Notepad++}. 
+
+På samme måde som hele dokumentet blev konstrueret, kan funktionerne benyttes til at omforme resultatet fra en hvilken som helst forspørgelse, til XML format.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
