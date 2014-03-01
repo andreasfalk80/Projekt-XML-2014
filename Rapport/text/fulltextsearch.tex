@@ -1,0 +1,104 @@
+\chapter{Full Text Search}
+\label{chap:fulltextserach}
+\section{Formål}
+\label{sec:fulltextsearchformaal}
+Det skal være muligt at lave fornuftig søgning på beskrivelser af resourcer.
+Full text search er en teknik hvor det man søger i, og selve forespørgelsen bearbejdes inden et resultat kan præsenteres. Denne bearbejdning er det der gør at søgningen i figur \ref{fts:simpel_eksempel} returnerer true, selvom ordet 'searches' ikke er i teksten der søges i.
+En del af denne bearbejdning foregår ved at mappe en masse forskellige former af samme ord til et ord, f.eks. huse og hus, bliver betragtet som det samme. Der ud over er der en masse ord, som f.eks. og, da, nå som ikke giver mening at søge på da de typisk optræder i store mængder i teksterne. Disse stopord ignoreres.  
+
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+select 
+  to_tsvector('english','This is a test of full text search') 
+  @@ 
+  to_tsquery('english', 'searches');
+------------------------------------
+	                     t
+\end{BVerbatim}
+\caption{Simpelt eksempel på full text search}
+\label{fts:simpel_eksempel}
+\end{figure}
+
+Der implementeres full text search på feltet resource.description i den modellerede SQL udgave af resource dokumentet. Det gøres ved at implementere en funktion der tager et ord som input, og så returnere udvalgte kolonner fra de resourcer, hvor ordet er fundet. 
+
+
+\section{Implementation af full text search}
+\label{sec:impl_af_FTS}
+
+Ved udførelsen af en søgning, skal begge funktioner to\_tsvector og to\_tsquery udføres, og dette kan, med fordel, optimeres i tilfælde hvor der skal søges ofte, eller i meget store dokumenter.
+
+For at gøre det muligt at indeksere teksten, kan et indeks oprettes, hvor det er funktionen to\_tsvector der indekseres. En anden fremgangsmåde er at tilføje en kolonne til tabellen, som kan indeholde to\_tsvector resultatet af det eller de felter der skal kunne søges i. I projektet er den sidste fremgangsmåde valgt. Der er fordele og ulemper ved begge fremgangsmåder, og ved den der er valgt her, er der ekstra pladsforbrug til at gemme ts\_vectoren og at den skal holdes opdateres hver gang description feltet opdateres. Og det er netop på grund af behovet for denne synkronisering at metoden er valgt, for det er en oplagt mulighed for at implementere en trigger. Og selvom Postgresql har en funktion indbygget 'tsvector\_update\_trigger' som man kan angive som trigger, implementeres funktionen fra grunden.
+
+Så følgende opgaver skal løses:
+
+\begin{compactitem}
+\item En triggerfunktion skal kodes. Den skal opdatere værdien af ts\_vectoren, så den svarer til description feltet.
+\item Tabellen resource skal udvides med den nye kolonne.
+\item En trigger skal oprettes, som anvender den ny udviklede triggerfunktion.
+\end{compactitem}
+\vspace{1.0mm}
+En simpel funktion implementeres, hvor funktionen to\_tsvector benyttes på description, og tildeles til feltet FTS\_index\_col.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+drop function if exists resource_trigger();
+create function resource_trigger() returns trigger
+as $$
+declare
+begin
+  new.FTS_index_col := 
+  to_tsvector('english', new.description);
+return new;
+end
+$$
+language plpgsql;
+\end{BVerbatim}
+\caption{Triggerfunktion}
+\label{fts:trigger_func}
+\end{figure}
+
+Triggerfunktionen skal nu kobles til en trigger, og det gøres med følgende stykke kode. 
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+create trigger resource_FTS_index_col 
+  before update of description,title or insert 
+  on resource 
+  for each row
+  execute procedure resource\_trigger();
+\end{BVerbatim}
+\caption{Oprettelse af trigger}
+\label{fts:trigger_create}
+\end{figure}
+
+Med alt dette defineret, plus et indeks oprettet på den nye kolonne, kan der forespørges på indholdet i description feltet. Funktionen searchDescription returnerer id, title og selve beskrivelsen for alle de rækker der matcher det angivede ord.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+drop function if exists searchDescription(text);
+create function searchDescription(word text) returns 
+  TABLE(resourceid int,title text, description text)
+as $$
+declare
+begin
+return query 
+select r.resourceid,r.title,r.description
+FROM resource as r
+WHERE fts_index_col @@ to_tsquery('english', word);
+end
+$$
+language plpgsql;
+\end{BVerbatim}
+\caption{Funktionen searchDescription}
+\label{fts:searchDescription}
+\end{figure}
+
+
+
+
+
+
+
+
+

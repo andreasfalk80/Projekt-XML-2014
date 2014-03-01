@@ -4,20 +4,23 @@
 \section{Formål}
 Det er muligt at gemme xml dokumenter i en SQL database, og til formålet er der lavet en ny SQL datatype der hedder xml. Ved at gemme XML i en kolonne af denne type, kan der laves forespørgelser via \lang{XPath} og \lang{XQuery}, i sammenspil med en normal SQL forespørgelse. Denne funktionalitet kaldes også SQL/XML.
 
-XML dokumentet resource skal nu gemmes i en relationel database, nærmere bestemt \prg{PostgreSQL~9.3}.%, som pt. kun understøtter \lang{XPath 1.0} forespørgelser. 
+XML dokumentet resource skal nu gemmes i en relationel database, nærmere bestemt \prg{PostgreSQL~9.3}, som pt. kun understøtter \lang{XPath 1.0} forespørgelser, og hovedsageligt har prioriteret udviklingen af publiseringsfunktionerne over funktioner som \funk{xmltable} som ellers er en del af SQL standarden. Dette få betydning hvis man vælger at ville shredde et XML dokument op, og indsætte det i en relationel model.
+
 Før et XML dokument kan gemmes i en sql database, bør man overveje hvilken strategi der skal følges. 
 \begin{itemize}
 	\item XML dokumentet gemmes i en enkelt celle i en tabel, uden der foretages nogen som helst bearbejdning, og SQL databasen benyttes udelukkende som et opbevaringssted.
-	\item XML dokumentet splittes(shreddes), og indsættes i en datamodel der er modelleret til at passe med den oprindelige XML struktur. 
-	
-	Man kan foretage enten en fuldstændig eller delvis opsplitning. 
-	
-	I tilfældes med resource, kunne en delvis opsplitning være at hvert \xmlelm{resource} element indsættes i en række bestående  af værdien fra \xmlelm{ID} trukket ud, og lagt i en kolonne, samt en kolonne af typen xml, der indeholder xml fragmenten for den enkelte resource.
-	
-	En fuld opsplitning vil betyder at der ikke gemmes XML, da al data er remodeleret.
+	\item XML dokumentet splittes(shreddes), og indsættes i en datamodel der er modelleret til at passe med den oprindelige XML struktur. Man kan foretage enten en fuldstændig eller delvis opsplitning. 	
 \end{itemize}
+ I tilfældet med resource, kunne en delvis opsplitning være at hvert \xmlelm{resource} element indsættes i en række bestående  af værdien fra \xmlelm{ID} trukket ud, og lagt i en kolonne, samt en kolonne af typen xml, der indeholder xml fragmenten for den enkelte resource.
+En fuld opsplitning vil betyder at der ikke gemmes XML, da al data er remodeleret.
 
-I de næste afsnit vil XML dokumentet resource blive gemt i en relationel database, det ske ved hjælp af forskellige \lang{XPath} forespørgelser. Derefter vil forskellige SQL/XML funktioner blive brugt til at opbygge XML dokumenter udfra den relationelle database.
+Der er fordele og ulemper ved begge valg, og hvilke nder passer til en specifik opgave afhænger i stor grad af hvilke operationer der skal foretages på data. Hvis der skal laves mange komplekse forespørgelser og mange opdateringer, så er den relationele model en god solid løsning. 
+
+Men hvis der mere er tale om opbevaring af nogle dokumenter, hvor forespørgelserne henter det er hele, eller dele af dokumentet, og det skal bruges som XML, så er ingen eller delvis shredding en løsning. 
+
+Et af de bedste argumenter for ikke at shredde et dokument, er hvis det er fra en ekstern kilde, og/eller strukturen ofte bliver ændret. Her vil en ændring i de berørte XPath/XQuery forespørgelser være nemmere at foretage, end at skulle modellere den relationelle model om. 
+
+I de næste afsnit vil der blive udviklet funktioner til at kunne gemme XML dokumentet resource i en relationel database. Det sker ved hjælp af forskellige \lang{XPath} forespørgelser. Derefter vil SQL/XML pupliceringsfunktioner blive brugt til at opbygge XML dokumenter udfra den relationelle database.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% section design af resource i DB %%%%%%%%%%%%%%%%%%%%%%
 \section{Design af XML i relationel database}

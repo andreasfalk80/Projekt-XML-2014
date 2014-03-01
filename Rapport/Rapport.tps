@@ -11,14 +11,14 @@ MaxPos.x=-1
 MaxPos.y=-1
 NormalPos.left=4
 NormalPos.top=26
-NormalPos.right=1724
-NormalPos.bottom=894
+NormalPos.right=827
+NormalPos.bottom=661
 Class=LaTeXView
-Document=text\intro.tex
+Document=text\XMLInSQLDatabase.tex
 
 [Frame0_View0,0]
-TopLine=0
-Cursor=1330
+TopLine=6
+Cursor=2884
 
 [SessionInfo]
 FrameCount=1

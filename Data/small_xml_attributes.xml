@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xmlwithattributes test='1'>
+<node1 part='12345'>
+test
+</node1>
+</xmlwithattributes>

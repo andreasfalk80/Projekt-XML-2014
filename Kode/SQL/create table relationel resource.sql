@@ -9,9 +9,30 @@ placedOnline date,
 identifierUrl text,
 publisherName text,
 publisherAgency text,
+FTS_index_col tsvector,
 primary key (resourceId)
 )
 ;
+
+-- Trigger function for resource til full text search - automatisk tsvector!!
+drop function if exists resource_trigger();
+create function resource_trigger() returns trigger
+as $$
+declare
+
+begin
+  new.FTS_index_col := to_tsvector('english', new.description);
+return new;
+end
+$$
+language plpgsql;
+
+
+create trigger resource_FTS_index_col 
+before update of description,title or insert 
+on resource 
+for each row
+execute procedure resource_trigger();
 
 drop table if exists interestingFact cascade;
 create table interestingFact(

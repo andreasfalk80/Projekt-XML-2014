@@ -5,7 +5,6 @@
 Denne rapport handler primært om hvordan xml dokumenter kan valideres, udsættes for effektive forespørgelser og sameksistere med og i en SQL database. Alle emner bliver behandlet ved brug af et gennemgående eksempel, som løbende udsættes for alle de forskellige teknologier som nævnes herunder.
 \begin{itemize}
 	\item XML Skema
-	\item DTD
 	\item XPath
 	\item XQuery
 	\item SQL/XML
@@ -14,9 +13,9 @@ Denne rapport handler primært om hvordan xml dokumenter kan valideres, udsættes 
 
 \subsection{Fremgangsmåde}
 \label{subsec:Fremgangsmaade}
-Da det er generelt er umuligt at behandle et XML dokument, hvis ikke strukturen er kendt, skal der laves en mindre analyse af dette. Det er hvad kapitel \ref{chap:analyse_xml_struktur} omhandler, hvor XQuery og XPath benyttes. I kapitel \ref{chap:XML_skema_for_resource} udnyttes det at strukturen for xml dokumentet nu er defineret, og der oprettes et XML skema for at dokumentere dette på en standard måde, og dermed også muliggøre validering af dokumentet.  Kapitel \ref{chap:XML_i_SQL_DB} handler om hvordan XMl dokumenter kan indlæses i en database, på forskellige måder, samt at data kan udtrækkes fra en database, og leveres som XML direkte fra databasen, uden brug af ekstra applikationer.  *TODO* beskriv resten af kapitlerne
+Da det er generelt er umuligt at behandle et XML dokument, hvis ikke strukturen er kendt, skal der laves en mindre analyse af denne. Det er hvad kapitel \ref{chap:analyse_xml_struktur} omhandler, hvor \lang{XQuery} og \lang{XPath} benyttes. I kapitel \ref{chap:XML_skema_for_resource} udnyttes det at strukturen for xml dokumentet nu er defineret, og der oprettes et XML skema for at dokumentere dette på en standard måde, og dermed også muliggøre validering af dokumentet.  Kapitel \ref{chap:XML_i_SQL_DB} handler om hvordan XML dokumenter kan indlæses i en database, samt hvordan data kan udtrækkes, og leveres som XML, uden brug af et applikationslag.  Tilsidst vil kapitel \ref{chap:fulltextserach} omhandle full text search, som muliggøre bedre søgning i større dokumenter og tekster.
 
-Men før der kan startes på alt dette, kommer først en beskrivelse af det xml dokument, som rapporten benytter som datakilde.
+Men før der kan startes på alt dette, kommer først en beskrivelse af det XML dokument, som rapporten benytter som datakilde.
 
 \subsection{XML dokumentet resource}
 \label{subsec:XML_dokumentet_resource}
@@ -25,27 +24,6 @@ XML dokumentet er gemt i filen \fil{resource.xml}, som er en kopi af filen \fil{
 Dataene i XML dokumentet er en liste over uddannelsesresourcer, hvor der for hver resource er en mængde oplysninger. Der er ud over titel og beskrivelse også oplysninger om udgiver, kategorier og hvornår resourcen er oprettet og meget andet.  
 
 I resten af rapporten vil brugen af navnet resource både referere til XML dokumentet, som er gemt i filen resource.xml, og til den instans af BaseX databasen der oprettes ud fra filen resource.xml. I tilfælde hvor betydningen ikke fremgår af sammenhængen, vil betydningen blive præciseret eksplicit.
-
-%\begin{itemize}
-%	\item Implementation af effektiv håndtering af xml-filen gemexport.xml.
-%	\begin{itemize}
-%		\item Første skridt er en analyse af strukturen, hvor resultatet er et xml skema, som kan validere vores xml fil. Dette gøres ved brug af BaseX,  hvor der oprettes en ny database på grundlag af resource.xml.
-%		\item Flere forskellige forespørgelser skrives i hhv. Xpath og Xquery,  som bl.a. viser kardinalitetten af  elementer i xml'en. Samt om elementer er oprettet, men er tomme elementer. 
-%		\item Som udgangspunkt antages det at xml'en indeholder alle yderligheder der kan forekomme, så f.eks. maks længde for et tekst element kan udledes vha. Forespørgelser mod xml'en.
-%		\item Der indsættes en reference til det nyoprettede skema, i den oprindelige xml, og skemaet valideres med xml plugin i Notepad++. Dette kan selvfølgelig gøres med et hvilken som helst xml valideringsværktøj.
-
-%	\end{itemize}
-%	\item Nu skal xml'en gemmes i en relationel database, og her kan der vælges flere tilgangsmåder.
-%	\begin{itemize}
-%		\item At modellere xml strukturen vha. Den Entitets og relationelle model, og splitte(shredde) xml op og indsætte den, så vi på den måde kan tilgå data og manipulere med den som en hvilken som helst anden sql database.
-%		\item vi kan vælge at indsætte hele vores xmlfil i en række i en tabel, og dernæst primært benytte Xpath forespørgelser til forespørgelser. Disse forespørgelser kan, og vil sikkert blive suppleret med brug af XmlSql funktioner for at strukturere resultatet af Xpath forespørgelserne yderligere.
-%		\item Sidste mulighed er delvis shredding, hvor f.eks.  de enkelte resourcer splittes ud i enkelte rækker, med enkelte vigtige attributer, id, evt titel, trulket ud i egne kolonner, for at simplificere filtrering på disse attributter.
-%	\end{itemize}
-%	\item Indlæsning foregår i postgresql 9.3, som kun understøtter Xpath 1.0, dvs. Ingen Xquery og enkelte funktioner fra nutidig Xpath kan ikke benyttes. Derudover mangler postgresql understøttelse af xmlsql funktionen xmltable,  som ellers er oplagt til mapping fra xml til relationelle tabeller. Hvorimod de implementerede publishing functions er implementeret ok.
-%	\end{itemize}
-
-
-
 
 
 
