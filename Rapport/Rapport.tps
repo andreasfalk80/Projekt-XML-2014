@@ -11,14 +11,14 @@ MaxPos.x=-1
 MaxPos.y=-1
 NormalPos.left=4
 NormalPos.top=26
-NormalPos.right=827
-NormalPos.bottom=661
+NormalPos.right=989
+NormalPos.bottom=870
 Class=LaTeXView
-Document=text\XMLInSQLDatabase.tex
+Document=text\fulltextsearch.tex
 
 [Frame0_View0,0]
-TopLine=6
-Cursor=2884
+TopLine=33
+Cursor=0
 
 [SessionInfo]
 FrameCount=1
