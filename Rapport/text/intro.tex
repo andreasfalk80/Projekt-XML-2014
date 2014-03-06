@@ -13,7 +13,7 @@ Denne rapport handler primært om hvordan xml dokumenter kan valideres, udsættes 
 
 \subsection{Fremgangsmåde}
 \label{subsec:Fremgangsmaade}
-Da det er generelt er umuligt at behandle et XML dokument, hvis ikke strukturen er kendt, skal der laves en mindre analyse af denne. Det er hvad kapitel \ref{chap:analyse_xml_struktur} omhandler, hvor \lang{XQuery} og \lang{XPath} benyttes. I kapitel \ref{chap:XML_skema_for_resource} udnyttes det at strukturen for xml dokumentet nu er defineret, og der oprettes et XML skema for at dokumentere dette på en standard måde, og dermed også muliggøre validering af dokumentet.  Kapitel \ref{chap:XML_i_SQL_DB} handler om hvordan XML dokumenter kan indlæses i en database, samt hvordan data kan udtrækkes, og leveres som XML, uden brug af et applikationslag.  Tilsidst vil kapitel \ref{chap:fulltextserach} omhandle full text search, som muliggøre bedre søgning i større dokumenter og tekster.
+Da det er generelt er umuligt at behandle et XML dokument, hvis ikke strukturen er kendt, skal der laves en mindre analyse af denne. Det er hvad kapitel \ref{chap:analyse_xml_struktur} omhandler, hvor \lang{XQuery} og \lang{XPath} benyttes. I kapitel \ref{chap:XML_skema_for_resource} udnyttes det at strukturen for xml dokumentet nu er defineret, og der oprettes et XML skema for at dokumentere dette på en standard måde, og dermed også muliggøre validering af dokumentet.  Kapitel \ref{chap:XML_i_SQL_DB} handler om hvordan XML dokumenter kan indlæses i en database, samt hvordan data kan udtrækkes, og leveres som XML, uden brug af et applikationslag.  Tilsidst  omhandler kapitel \ref{chap:fulltextserach} full text search, som muliggører bedre søgning i større dokumenter og tekster.
 
 Men før der kan startes på alt dette, kommer først en beskrivelse af det XML dokument, som rapporten benytter som datakilde.
 
@@ -21,7 +21,7 @@ Men før der kan startes på alt dette, kommer først en beskrivelse af det XML dok
 \label{subsec:XML_dokumentet_resource}
 XML dokumentet er gemt i filen \fil{resource.xml}, som er en kopi af filen \fil{gemexport.xml} fra kursets hjemmeside. Filen er at finde i mappen Data i projektmappen. Omdøbningen skyldes at navnet gemexport ikke var sigende for indholdet. 
 
-Dataene i XML dokumentet er en liste over uddannelsesresourcer, hvor der for hver resource er en mængde oplysninger. Der er ud over titel og beskrivelse også oplysninger om udgiver, kategorier og hvornår resourcen er oprettet og meget andet.  
+Dataene i XML dokumentet er en liste over uddannelsesresourcer, hvor der for hver resource er en mængde oplysninger. Der er ud over titel og beskrivelse blandt andet også oplysninger om udgiver, kategorier og hvornår resourcen er oprettet.  
 
 I resten af rapporten vil brugen af navnet resource både referere til XML dokumentet, som er gemt i filen resource.xml, og til den instans af BaseX databasen der oprettes ud fra filen resource.xml. I tilfælde hvor betydningen ikke fremgår af sammenhængen, vil betydningen blive præciseret eksplicit.
 

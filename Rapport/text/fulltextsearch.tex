@@ -3,8 +3,9 @@
 \section{Formål}
 \label{sec:fulltextsearchformaal}
 Det skal være muligt at lave fornuftig søgning på beskrivelser af resourcer.
-Full text search er en teknik hvor det man søger i, og selve forespørgelsen bearbejdes inden et resultat kan præsenteres. Denne bearbejdning er det der gør at søgningen i figur \ref{fts:simpel_eksempel} returnerer true, selvom ordet 'searches' ikke er i teksten der søges i.
-En del af denne bearbejdning foregår ved at mappe en masse forskellige former af samme ord til et ord, f.eks. huse og hus, bliver betragtet som det samme. Der ud over er der en masse ord, som f.eks. og, da, nå som ikke giver mening at søge på da de typisk optræder i store mængder i teksterne. Disse stopord ignoreres.  
+Full text search er en teknik hvor teksten der søges i, og selve forespørgelsen bearbejdes inden et resultat kan præsenteres. Denne bearbejdning er det der gør at søgningen i figur \ref{fts:simpel_eksempel} returnerer true, selvom ordet 'searches' ikke er i teksten der søges i.
+
+En del af denne bearbejdning foregår ved at mappe en masse forskellige former af samme ord til et ord, f.eks. huse og hus, bliver betragtet som det samme. Der ud over er der en masse stopord, som f.eks. 'og', 'da', 'nå' som ikke giver mening at søge efter, da de typisk optræder i store mængder i teksterne. Disse stopord ignoreres.  
 
 \begin{figure}[ht]
 \centering
@@ -26,33 +27,35 @@ Der implementeres full text search på feltet resource.description i den modeller
 \section{Implementation af full text search}
 \label{sec:impl_af_FTS}
 
-Ved udførelsen af en søgning, skal begge funktioner to\_tsvector og to\_tsquery udføres, og dette kan, med fordel, optimeres i tilfælde hvor der skal søges ofte, eller i meget store dokumenter.
+Ved udførelsen af en søgning, udføres begge funktioner to\_tsvector og to\_tsquery, og dette kan optimeres med indeksering, i tilfælde hvor der skal søges ofte, eller i meget store dokumenter.
 
-For at gøre det muligt at indeksere teksten, kan et indeks oprettes, hvor det er funktionen to\_tsvector der indekseres. En anden fremgangsmåde er at tilføje en kolonne til tabellen, som kan indeholde to\_tsvector resultatet af det eller de felter der skal kunne søges i. I projektet er den sidste fremgangsmåde valgt. Der er fordele og ulemper ved begge fremgangsmåder, og ved den der er valgt her, er der ekstra pladsforbrug til at gemme ts\_vectoren og at den skal holdes opdateres hver gang description feltet opdateres. Og det er netop på grund af behovet for denne synkronisering at metoden er valgt, for det er en oplagt mulighed for at implementere en trigger. Og selvom Postgresql har en funktion indbygget 'tsvector\_update\_trigger' som man kan angive som trigger, implementeres funktionen fra grunden.
+For at gøre det muligt at indeksere teksten, kan et indeks, hvor det er funktionen to\_tsvector der indekseres, oprettes. En anden fremgangsmåde er at tilføje en kolonne til tabellen, som kan indeholde to\_tsvector resultatet af det eller de felter der skal kunne søges i. I projektet er den sidste fremgangsmåde valgt. Der er fordele og ulemper ved begge fremgangsmåder, og ved den der er valgt her, er der ekstra pladsforbrug til at gemme ts\_vectoren og at den skal holdes opdateres hver gang description feltet opdateres. Og det er netop på grund af behovet for denne synkronisering at metoden er valgt, for det er en oplagt mulighed for at implementere en trigger. 
 
-Så følgende opgaver skal løses:
+\prg{PostgreSQL} har en funktion indbygget som man kan angive som trigger. 'tsvector\_update\_trigger' er lavet for at kunne få synkroniseret tsvector kolonnen med de rigtige data, uden at det kræver implementation af en triggerfunktion. I projektet er der alligevel udviklet en funktion fra bunden. Årsagen er at der ingen læring er ved at benytte den funktionalitet der allerede er stillet til rådighed.
+
+Så følgende opgaver løses:
 
 \begin{compactitem}
-\item En triggerfunktion skal kodes. Den skal opdatere værdien af ts\_vectoren, så den svarer til description feltet.
-\item Tabellen resource skal udvides med den nye kolonne.
-\item En trigger skal oprettes, som anvender den ny udviklede triggerfunktion.
+\item En triggerfunktion kodes. Den skal opdatere værdien af ts\_vectoren, så den svarer til description feltet.
+\item Tabel definitionen af resource udvides, så den indeholder den nye kolonne.
+\item En trigger oprettes, som anvender den ny udviklede triggerfunktion.
 \end{compactitem}
 \vspace{1.0mm}
 En simpel funktion implementeres, hvor funktionen to\_tsvector benyttes på description, og tildeles til feltet FTS\_index\_col.
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
-drop function if exists resource_trigger();
-create function resource_trigger() returns trigger
-as $$
-declare
-begin
-  new.FTS_index_col := 
-  to_tsvector('english', new.description);
-return new;
-end
-$$
-language plpgsql;
+01: drop function if exists resource_trigger();
+02: create function resource_trigger() returns trigger
+03: as $$
+04: declare
+05: begin
+06:   new.FTS_index_col := 
+07:   to_tsvector('english', new.description);
+08: return new;
+09: end
+10: $$
+11: language plpgsql;
 \end{BVerbatim}
 \caption{Triggerfunktion}
 \label{fts:trigger_func}
@@ -62,43 +65,64 @@ Triggerfunktionen skal nu kobles til en trigger, og det gøres med følgende stykk
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
-create trigger resource_FTS_index_col 
-  before update of description,title or insert 
-  on resource 
-  for each row
-  execute procedure resource\_trigger();
+01: create trigger resource_FTS_index_col 
+02:   before update of description,title or insert 
+03:   on resource 
+04:   for each row
+05:   execute procedure resource\_trigger();
 \end{BVerbatim}
 \caption{Oprettelse af trigger}
 \label{fts:trigger_create}
 \end{figure}
 
-Med alt dette defineret, plus et indeks oprettet på den nye kolonne, kan der forespørges på indholdet i description feltet. Funktionen searchDescription returnerer id, title og selve beskrivelsen for alle de rækker der matcher det angivede ord.
+Funktionenen resource\_trigger og oprettelsen af triggeren kan ses i filen Kode/SQL/create\_tables.sql
+
+
+Med alt dette defineret, plus et indeks oprettet på den nye kolonne, kan der forespørges på indholdet i description feltet. Funktionen searchDescription tager et ord som input, og returnerer en xml fragment med  resourceid, title og selve beskrivelsen for alle de rækker der matcher det angivede ord.
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
-drop function if exists searchDescription(text);
-create function searchDescription(word text) returns 
-  TABLE(resourceid int,title text, description text)
-as $$
-declare
-begin
-return query 
-select r.resourceid,r.title,r.description
-FROM resource as r
-WHERE fts_index_col @@ to_tsquery('english', word);
-end
-$$
-language plpgsql;
+01: drop function if exists searchDescription(text);
+02: create function searchDescription(word text) returns setof xml
+03: as $$
+04: declare
+05: begin
+06: return query select 
+07: xmlelement(name result,
+08:   xmlagg(xmlelement(name partialresource,
+09:          xmlforest(r.resourceid,r.title,r.description))))
+10: FROM resource as r
+11: WHERE fts_index_col @@ to_tsquery('english', word);
+12: end
 \end{BVerbatim}
 \caption{Funktionen searchDescription}
 \label{fts:searchDescription}
 \end{figure}
 
 
+\section{Konklusion}
+Med denne implementation af full text søgning kan resourcer nu findes udfra indholdet af beskrivelsesfeltet, og resultatet formes som XML med SQL/XML funktioner. I figur \ref{fts:searchDescriptionResult} ses starten af resultatet af en søgning. Bemærk at 'brains' ikke er et ord i teksten, men ordet 'brain' findes, og derfor medtages resourcen i resultatet.
+\begin{figure}[ht]
+\centering
+\begin{BVerbatim}
+<result>
+  <partialresource>
+    <resourceid>3</resourceid>
+    <title>4Teachers</title>
+    <description>helps teachers integrate technology into instruction. 
+                 It features various tools for teachers: one for creating 
+                 quizzes that students can take online, another for 
+                 organizing and annotating web sites, a third for 
+                 developing rubrics, and more. A webzine presents brain 
+                 games, web lessons, and stories about teachers 
+                 and students using technology.
+     </description>
+  </partialresource>
+...
+</result>
+\end{BVerbatim}
+\caption{Resultat for searchdescription('brains')}
+\label{fts:searchDescriptionResult}
+\end{figure}
 
-
-
-
-
-
-
+Det fulde resultat kan ses i filen Data/searchDescriptionOutput.xml, hvor alle 22 resources vises.

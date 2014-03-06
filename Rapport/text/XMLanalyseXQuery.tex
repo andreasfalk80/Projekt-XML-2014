@@ -4,8 +4,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Formål %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Formål}
 \label{sec:Formaal_xml_analyse}
-At gennemskue, og udlede strukturen af et xml dokument kan være en stor opgave, især for et komplekst dokument med mange elementer. I tilfældet med resource, som indeholder mange oplysninger for 1741 resourcer, kan strukturen ikke gennemskues ved en simpel gennemlæsning af filen. 
-Alternativet kan være at oprette en database i \prg{BaseX}, og ved brug af en række \lang{XQuery} forspørgelser kan der samles nok informationer om elementerne i XML'en, til at kunne beskrive strukturen. På denne måde kan \prg{Basex} hjælpe med at skabe overblik. Men det er stadig en manuel process, hvor der løbende udvikles nye forespørgelser efterhånden som man opbygger kendskab til XML dokumentet, og identificerer nye aspekter der skal undersøges. Figur \ref{xquery:count_empty_image} viser hvordan det kan afgøres om der findes elementer \xmlelm{image} hvor alle dets underelementer er tomme. Hvis man ønsker at lave samme forespørgelse for elementet \xmlelm{itemDate}, så kræver det at man skriver en ny forespørgelse, der minder utroligt meget om den der allerede er udviklet.
+Det er en stor opgave at gennemskue, og udlede strukturen af et xml dokument. Især for et komplekst dokument med mange elementer, og i tilfældet med dokumentet resource, som indeholder mange oplysninger for hele 1741 resourcer, kan strukturen ikke gennemskues ved en simpel gennemlæsning af filen. 
+Alternativet kan være at oprette en database i \prg{BaseX}, og ved at bruge en række \lang{XQuery} forspørgelser kan der samles nok informationer om elementerne i XML'en, til at kunne beskrive strukturen. På denne måde kan \prg{BaseX} hjælpe med at skabe overblik. Men det er stadig en manuel process, hvor der løbende udvikles nye forespørgelser efterhånden som man opbygger kendskab til XML dokumentet, og identificerer nye aspekter der skal undersøges. 
+
+Figur \ref{xquery:count_empty_image} viser hvordan det kan afgøres om der findes elementer \xmlelm{image} hvor alle dets underelementer er tomme. Hvis man ønsker at lave samme forespørgelse for elementet \xmlelm{itemDate}, så kræver det at man skriver en ny forespørgelse, der minder utroligt meget om den der allerede er udviklet.
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
@@ -18,7 +20,7 @@ count(//resource/image[url ='' and
 \label{xquery:count_empty_image}
 \end{figure}
 
-Selvom denne fremgangsmåde vil virke, kan der istedet udvikles en mere generel funktion, som behandler dokumentet ud fra generelle betragtninger, og derfor kan bruges for alle XML dokumenter. Sådan en \lang{XQuery} funktion udvikles i dette projekt, så de ønskede metadata for XML strukturen bliver returneret på en strukturet vis. 
+Selvom denne iterative fremgangsmåde vil virke, kan der istedet udvikles en mere generel funktion, som behandler dokumentet ud fra generelle betragtninger, og derfor kan bruges for alle XML dokumenter. Sådan en \lang{XQuery} funktion udvikles i dette projekt, så de ønskede metadata for XML strukturen bliver returneret på en strukturet vis, og det er udviklingen af den funktionalitet som dette kapitel hanlder om.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Brug af BaseX %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Brug af BaseX}
@@ -31,7 +33,7 @@ Koden til funktionerne der udvikles findes i filen \fil{Kode/XQuery/XQuery-analy
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Design af analyse funktion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Design af analyse funktioner}
 \label{sec:DesignAfAnalyseFunktion}
-Der er næsten uendeligt mange aspekter at vurdere i forhold til struktur og datatyper, som kan være interresant at undersøge, og følgende er valgt til dette projekt, da de i lang udstrækning er tilstrækkeligt til at kunne definere et XML skema.
+Der er næsten uendeligt mange aspekter at vurdere i forhold til struktur og datatyper, som kan være interresant at undersøge. Følgende er udvalgt som resultatet for analysefunktionen, da de i lang udstrækning er tilstrækkeligt til at kunne definere et XML skema.
 \begin{compactitem}
 	\item Element navn
 	\item Underelementer.
@@ -40,7 +42,7 @@ Der er næsten uendeligt mange aspekter at vurdere i forhold til struktur og data
 	\item Attributer.
 \end{compactitem}
 \vspace{1.0mm}
-Figur \ref{code:struktur_metadata-xml} viser den XML struktur som de nævnte oplysninger skal præsenteres i. Informationer om et element angives som attributter til elementet \xmlelm{element}, og informationer om dets attributer som \xmlelm{attribute} underelementer. Denne struktur for \xmlelm{element} gentages rekursivt for alle underlementerne. 
+Figur \ref{code:struktur_metadata-xml} viser den XML struktur som de nævnte oplysninger skal præsenteres i. For hvert element i dokumentet der analyseres, oprettes der et element \xmlelm{element} i resultat XML'en. Informationer vedrørende elementet angives som attributter, og informationer om elementets attributer som selvstændige \xmlelm{attribute} underelementer. Denne struktur for \xmlelm{element} gentages rekursivt for alle underelementerne i dokumentet der analyseres. 
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
@@ -80,14 +82,14 @@ Løsningen struktureres ud i flere funktioner, svarende til en funktion pr. oplys
 	\item \funk{analyze\_card} finder kardinaliteten af elementet
 \end{compactitem}
 \vspace{1.0mm}
-De følgende afsnit vil beskrive de eneklte funktioners implementation.
+I de følgende afsnit beskrives de enkelte funktioners implementation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Funktion \funk{analyze}}
 \label{funktion_analyze}
 Funktionen \funk{analyze} begynder analysen ved input elementets børn, og returnerer derfor ingen oplysninger om selve input elementet. Det betyder at en analyse af et helt xml dokument, eller fragment, bør startes med kaldet \verb|local:analyze(/)|, altså med dokumentroden som parameter. Dette skyldes at f.eks. kardinalitets analysen kræver information om hvilken kontekst elementerne optræder i.
 
-Den eneste funktionalitet der implementeres i denne funktion er at tilføje det yderste \xmlelm{elements} element til resultatet, og initiering af de rekursive kald.
+Den eneste funktionalitet der er implementeret i denne funktion er at tilføje det yderste \xmlelm{elements} element til resultatet, og initiering af de rekursive kald.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  subsection analyze2  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Funktion \funk{analyze2}}
@@ -117,9 +119,9 @@ Funktionen \funk{analyze2} er den rekursive funktion der reelt behandler xml str
 
 Alle tags med samme navn i den nuværende kontekst behandles og analyseres samlet, og derfor grupperes disse ved at opbygge en liste af unikke elementnavne i linie \lref{04}. For hvert af navnene gemmes resultatet af \funk{analyze\_maxlength} og \funk{analyze\_card} i to variable. Brugen af variable sker udelukkende for at øge læsbarheden af opbygningen af \xmlelm{element} i linie \lref{09}. Attributter behandles i linie \lref{10}, hvor der opbygges et \xmlelm{attribut} element for hver atribut fundet. Tilsidst foretages det rekursive kald til \funk{analyze2}, som sørger for at opbygge \xmlelm{element} for det næste niveau.
 
-Et eksempel kan måske bedst illustrere, hvad det er der leveres til funktionerne som input, for det er vigtigt at have  styr på den del. 
+Et eksempel kan måske bedst illustrere, hvad det er der leveres til funktionerne som input, for det er vigtigt at have  styr på den del:
 
-Hvis \funk{analyze2} kaldes med \xmlelm{root} elementet, kommer variablen \$names til at indeholde en liste med et element, nemlig strengen 'resource', da det er det eneste element der er under \xmlelm{root}. Ved kald til f.eks. \funk{analyze\_maxlength}, kan man i linie \lref{06} se at input er givet ved en forespørgelse, som finder alle de underelementer til \xmlelm{root}, som hedder \$el, i vores tilfælde er det strengen 'resource'. Så der er kun et kald til \funk{analyze\_maxlength} i dette eksmpel, til gengæld er inputtet til funktionen,  mængden af alle \xmlelm{resource} elementerne. 
+Hvis \funk{analyze2} kaldes med \xmlelm{root} elementet, kommer variablen \$names til at indeholde en liste med et element, nemlig strengen 'resource', da det er det eneste element der er under \xmlelm{root}. Ved kald til \funk{analyze\_maxlength}, kan man i linie \lref{06} se at input er givet ved en forespørgelse, som finder alle de underelementer til \xmlelm{root}, som hedder \$el, i vores tilfælde er det strengen 'resource'. Så der er kun et kald til \funk{analyze\_maxlength} i dette eksmpel, til gengæld er inputtet, mængden af alle \xmlelm{resource} elementerne. 
 
 Funktionen skal jo netop indsamle generelle oplysninger på tværs af alle 'ens' elementer, og dette kan kun ske, hvis man betragter mængder af elementer. 
 
@@ -129,7 +131,7 @@ De andre funktionskald, foregår på samme måde, pånær for \funk{analyze\_card}, d
 \subsection{Funktion \funk{analyze\_attributes}}
 \label{subsec:analyze_attributes}
 
-Ud fra mængden af elementer som bliver givet som input bliver der i linie \lref{04} fundet de unikke navne for hver attribut, og i line \lref{06} bliver længden af hver atribut fundet, og tilsidst bliver den maksimale værdi fundet sat ind som en del af resultatet. Koden kan ses i figur \ref{code:func_analyze_attributes}.
+Koden kan ses i figur \ref{code:func_analyze_attributes}. Ud fra mængden af elementer som bliver givet som input bliver der i linie \lref{04} fundet de unikke navne for hver attribut, og i line \lref{06} bliver længden af hver atribut fundet, og tilsidst bliver den maksimale værdi fundet sat ind som en del af resultatet. 
 \begin{figure}[ht]
 \centering
 \begin{BVerbatim}
@@ -195,7 +197,7 @@ Hvis vi kigger på eksemplet fra afsnit \ref{funktion_analyze2}, betyder det at f
 \label{code:func_analyze_card}
 \end{figure}
 
-Koden i linie \lref{04} tæller antallet af underelementer, for hvert enkelt forælder element. Derfor indeholder variablen \$child\_count en mængde af resultater af count, et resultat for hver forælder. Den mindste og største værdi kan nu findes, og bruges til at opsættes resultatet på den ønskede form.
+Koden i linie \lref{04} i figur \ref{code:func_analyze_card} tæller antallet af underelementer, for hvert enkelt forælder element. Derfor indeholder variablen \$child\_count en mængde af resultater af count, et resultat for hver forælder. Den mindste og største værdi kan nu findes, og bruges til at opsættes resultatet på den ønskede form.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  section konklusion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Konklusion}

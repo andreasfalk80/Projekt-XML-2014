@@ -3,12 +3,12 @@
 \section{Formål}
 \label{sec:formaal_skemaet}
 Det primære formål med et XML skema, er muligheden for at validere et XML dokument, og på den måde kontrollere at det aftalte format er overholdt. Ofte kan disse skemaer, som i sig selv er XML dokumenter, også bruges til at automatisk generering af kode til behandling af alle de XML dokumenter som er valide i forhold til skemaet. Dette sker typisk gennem tredjeparts software. 
-Et XML skema skal beskrive 2 vigtige egenskaber for at opfylde det beskrevne behov. 
+Et XML skema skal beskrive to vigtige egenskaber for at opfylde det beskrevne behov. 
 \begin{description}
-	\item[Struktur] som beskriver forholdet mellem forældre og børn elementer. Her kommer complexType og sequence med flere i spil
-	\item[Datatype] som angiver format eller værdisæt for det data der er gemt i elementerne. Her benyttes simpleType og restriction med flere.
+	\item[Struktur] som beskriver forholdet mellem forældre og børn elementer. Her kommer complexType og sequence i spil
+	\item[Datatype] som angiver format eller værdisæt for det data der er gemt i elementerne. Her benyttes simpleType og restriction.
 \end{description}
-Med analyse funktionen fra kapitel \ref{chap:analyse_xml_struktur}, er det nemt at komme igang med at definere et skema, som kan validere strukturen i xml dokumentet. Så med resultatet fra den automatiske analyse er grundstrukturen i skemaet klarlagt.
+Med analyse funktionen fra kapitel \ref{chap:analyse_xml_struktur}, er det nemt at komme igang med at definere et skema, som kan validere strukturen i xml dokumentet. Med resultatet fra den automatiske analyse er grundstrukturen i skemaet klarlagt.
 Men resultatet fra \funk{analyze} indeholder ikke nogen information om datatyperne. Det kan være svært at fastslå disse automatisk, da det typisk forudsætter en del domæne viden. Datatyperne vil derfor i høj grad blive udledt udfra deres navne og manuel genkendelse af f.eks. et dato format. Nogle af begrænsningerne(restrictions) der benyttes i skemaet, er tilføjet udelukkende for at demonstrere flere forskellige typer af begrænsninger, og vil måske ikke være korrekte i XML dokumentets virkelige domæne, på trods af at denne instans af dokumentet overholder dem.
 
 \section{Skemaet \fil{resource.xsd}}
@@ -38,7 +38,7 @@ Gældende for en sekvens er at alle elementerne skal optræde i den angivede række
 For hvert element i sekvensen kan der angives kardinalitet, ved brug af indikatorerne minOccurs og maxOccurs, og her er brugt de værdier som analyse funktionen returnerede.
 	
 	\vspace{1.0mm}
-	\item Disse elementer er defineret som simple typer, med en begrænsing angivet i forhold til den valgte basis type:
+	\item Følgende elementer er defineret som simple typer, med en begrænsing angivet i forhold til den valgte basis type:
 	\begin{compactitem}
 	  \item \xmlelm{title} titleType oprettes med basistypen string, og minLength og maxLength angives til hhv. 5 og 110. 
 		\item \xmlelm{url} urlType oprettes med basistypen string, og med et meget simpelt pattern der matcher formattet for en url.
@@ -49,7 +49,7 @@ For hvert element i sekvensen kan der angives kardinalitet, ved brug af indikato
   Disse typer illustrerer meget godt brugen af begrænsninger, hvor det i forvejen udbyggede typehieraki nemt kan udvides med mere specialiserede typer.
 	
 	\vspace{1.0mm}
-  \item Disse elementer defineres ved brug af standard typer:
+  \item Følgende elementer defineres ved brug af standard typer:
 	\begin{compactitem}
  		\item \xmlelm{ID} positivInteger
     \item \xmlelm{description} string
@@ -69,7 +69,7 @@ For hvert element i sekvensen kan der angives kardinalitet, ved brug af indikato
 
 \section{Konklusion}
 \label{sec:Konklusion_xmlskema}
-Med et skema defineret, kan xml strukturen valideres. Det gøres ved at tilføje en reference til skemaet i rod elementet. Dette er gjort ved at lave en kopi af resource.xml, kaldet resource\_with\_namespace.xml, og så tilføje koden fra figur \ref{code:reference_til_skema} i den fil. Dette er gjort, for ikke at redigere i kilde-filen. I dette projekt er \prg{Notepad++} samt pluginet 'xml tools' brugt til at foretage valideringen. 
+Med et skema defineret, kan xml strukturen valideres. Der er oprettet en kopi af resource.xml, kaldet resource\_with\_namespace.xml, og koden fra figur \ref{code:reference_til_skema} er tilføjet i den nyoprettede fil. Dette er gjort, for ikke at redigere i kilde-filen. Nu er der tilføjet en reference til skemaet i rod elementet, og valideringen kan foretages med et passende værktøj. I projektet er \prg{Notepad++} samt pluginet 'xml tools' brugt til at foretage valideringen. 
 
 \begin{figure}[ht]
 \centering
